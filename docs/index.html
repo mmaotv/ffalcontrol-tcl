@@ -177,6 +177,19 @@ h2{
 .step h4{font-size:15px;font-weight:500;margin-bottom:7px}
 .step p{font-size:13.5px;color:var(--fg2);line-height:1.6}
 
+/* ---------- screenshots ---------- */
+.shots{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:38px}
+.shot{
+  border:1px solid var(--line);border-radius:18px;overflow:hidden;
+  background:#000;transition:border-color .2s,transform .2s;
+}
+.shot:hover{border-color:var(--line-strong);transform:translateY(-2px)}
+.shot img{display:block;width:100%;height:auto}
+.shot .cap{padding:17px 21px 19px;border-top:1px solid var(--line);background:var(--glass)}
+.shot .cap b{display:block;font-size:14.5px;font-weight:500;letter-spacing:-.01em;margin-bottom:5px}
+.shot .cap span{font-size:13px;color:var(--fg2);line-height:1.62}
+.foot-note{margin-top:20px;font-size:12.5px;color:var(--fg3);line-height:1.7}
+
 /* ---------- notice ---------- */
 .notice{
   margin-top:34px;padding:26px 28px;border-radius:18px;
@@ -195,6 +208,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 60px;margin-top:30px}
 
 @media(max-width:860px){
   .g3,.dl,.steps,.compat{grid-template-columns:1fr 1fr}
+  .shots{grid-template-columns:1fr}
   .row{grid-template-columns:1fr;gap:8px}
   .row.head{display:none}
   .step{padding-right:0;margin-bottom:24px}
@@ -227,6 +241,51 @@ footer{border-top:1px solid var(--line);padding:44px 0 60px;margin-top:30px}
     </p>
   </div>
 </div>
+
+<section id="shots">
+  <div class="wrap">
+    <div class="eyebrow">界面</div>
+    <h2>一屏看完，没有二级菜单</h2>
+    <p class="sub">
+      整个工具就是一块面板：上面是只读诊断，下面是三排按钮。遥控器上下左右就能走完，
+      不用注册、不用登录、不联网也能用。
+    </p>
+    <div class="shots">
+      <div class="shot">
+        <img src="shots/main-aerial.png" alt="内置 Aerial 版主界面：诊断卡片与三排操作按钮" loading="lazy">
+        <div class="cap">
+          <b>内置版主界面</b>
+          <span>右上角标出内置了哪套桌面，第二排多一个「装内置桌面」，点一下就按 放行白名单 → 安装 → 申请默认桌面 三步走完。</span>
+        </div>
+      </div>
+      <div class="shot">
+        <img src="shots/push-analysis.png" alt="推送安装后的策略判定结果：桌面类、命中 launcherStrategy、给出放行建议" loading="lazy">
+        <div class="cap">
+          <b>先判定，再动手</b>
+          <span>解析出包名、版本、是否声明桌面、谁签的名，算出会被哪条策略拦，并把要改的那一项直接写清楚 —— 改之前你就能看见。</span>
+        </div>
+      </div>
+      <div class="shot">
+        <img src="shots/push-judge.png" alt="判定后的确认框：将修改 1 处厂商配置，已自动备份可回滚" loading="lazy">
+        <div class="cap">
+          <b>每一步都要你点头</b>
+          <span>改配置前明确告诉你动了几处、已备份、可回滚；改完才调系统安装框，装不装最后还是你决定。</span>
+        </div>
+      </div>
+      <div class="shot">
+        <img src="shots/main-universal.png" alt="通用版主界面：只做策略绕过，不内置任何桌面" loading="lazy">
+        <div class="cap">
+          <b>通用版主界面</b>
+          <span>不绑定任何桌面，只负责净化、放行和推送安装。已经装好桌面的人装这个就够。</span>
+        </div>
+      </div>
+    </div>
+    <p class="foot-note">
+      界面截图为实机拍摄（非效果图）。诊断卡片里的「配置行 0」是因为拍摄机不是 TCL 设备、读不到厂商配置；
+      在电视上会显示实际读到的配置行数。
+    </p>
+  </div>
+</section>
 
 <section>
   <div class="wrap">
