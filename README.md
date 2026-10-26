@@ -4,7 +4,10 @@
 
 不需要电脑、不需要 ADB、不需要 root。桌面已经打进包里，断网也能用。
 
+📄 **图文介绍页（推荐先看这个）**：https://mmaotv.github.io/ffalcontrol-tcl/
+
 > 本项目是 [xnklerEd/ffalcontrol](https://github.com/xnklerEd/ffalcontrol)（MIT）的衍生版，来源与改动见 [来源说明](#来源说明)。非官方项目，与 TCL、雷鸟、FFALCON 无关。
+
 
 ## 0.3.0 新增了什么
 
