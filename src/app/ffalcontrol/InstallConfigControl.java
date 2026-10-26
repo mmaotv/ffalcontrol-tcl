@@ -15,12 +15,16 @@ import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
- * InstallConfig 行：只允许改 launcherStrategy 的 packages / enable，其余 strategy 一字不动。
+ * InstallConfig 行：只允许改 launcherStrategy 的 packages / enable，以及两个拦截名单的 packages。
+ * 其余 strategy 一字不动（render 里做深度语义比对）。
  *
  * 依据（本机 /system/priv-app/PackageInstaller_tv/PackageInstaller_tv.apk 反编译）：
  *   com.android.packageinstaller.config.InstallConfigManager 通过
@@ -31,11 +35,14 @@ import java.util.UUID;
  *     - 包名在 packages 白名单               -> 放行
  *     - 签名等于当前默认 HOME              -> 还要 metaData com.tcl.app.type == "com.tcl.ui"
  *     - 其余                                 -> verifyPendingInstall(-1)
- * 因此 launcherStrategy.packages 是本机唯一可写的 HOME 放行入口。
+ *   BlackStrategy / OverDueStrategy：包名 ∈ packages -> 拒（所以"移出名单"就是放行）
+ * 因此 launcherStrategy.packages 是 HOME 放行入口，两个拦截名单的 packages 是解封入口。
  */
 final class InstallConfigControl {
     static final String FEATURE = "InstallConfig";
     static final String LAUNCHER = "launcherStrategy";
+    static final String BLACKLIST = "blackListStrategy";
+    static final String OVERDUE = "overDueStrategy";
     static final Uri URI = Uri.parse("content://com.tcl.providers.config/" + FEATURE);
     private static final String PACKAGE_PATTERN = "[A-Za-z0-9_]+(\\.[A-Za-z0-9_]+)+";
 
@@ -53,7 +60,8 @@ final class InstallConfigControl {
         out.put("content_length", state.raw == null ? 0 : state.raw.length());
         out.put("strategies", strategies(state.raw));
         out.put("launcher_allowlist", launcherList(state.raw));
-        out.put("write_api", "allow_launcher_package | remove_launcher_package | set_launcher_enable");
+        out.put("write_api", "allow_launcher_package | remove_launcher_package | set_launcher_enable"
+                + " | remove_from_strategy | add_to_strategy");
         return out;
     }
 
@@ -83,14 +91,26 @@ final class InstallConfigControl {
             String pkg = request.optString("package", "");
             if (!pkg.matches(PACKAGE_PATTERN))
                 throw new GuardControl.ApiFailure(422, "package must be a full package name");
-            proposed = withLauncherPackage(before.raw, pkg, true);
+            proposed = withPackage(before.raw, LAUNCHER, pkg, true);
             applied = "allow:" + pkg;
         } else if ("remove_launcher_package".equals(action)) {
             String pkg = request.optString("package", "");
             if (!pkg.matches(PACKAGE_PATTERN))
                 throw new GuardControl.ApiFailure(422, "package must be a full package name");
-            proposed = withLauncherPackage(before.raw, pkg, false);
+            proposed = withPackage(before.raw, LAUNCHER, pkg, false);
             applied = "remove:" + pkg;
+        } else if ("remove_from_strategy".equals(action) || "add_to_strategy".equals(action)) {
+            // 只对「拦截名单」类策略开放，且 add 分支实际上只用于撤销回滚。
+            String pkg = request.optString("package", "");
+            String strategy = request.optString("strategy", "");
+            if (!pkg.matches(PACKAGE_PATTERN))
+                throw new GuardControl.ApiFailure(422, "package must be a full package name");
+            if (!BLACKLIST.equals(strategy) && !OVERDUE.equals(strategy))
+                throw new GuardControl.ApiFailure(422,
+                        "strategy must be " + BLACKLIST + " or " + OVERDUE);
+            boolean add = "add_to_strategy".equals(action);
+            proposed = withPackage(before.raw, strategy, pkg, add);
+            applied = (add ? "add:" : "remove:") + strategy + "/" + pkg;
         } else if ("set_launcher_enable".equals(action)) {
             if (!request.has("enable"))
                 throw new GuardControl.ApiFailure(422, "enable is required");
@@ -190,35 +210,39 @@ final class InstallConfigControl {
         return rows.getJSONObject(0);
     }
 
-    private static JSONObject launcher(JSONObject top) throws Exception {
+    private static JSONObject strategy(JSONObject top, String name) throws Exception {
         JSONArray list = top.getJSONArray("strategies");
         JSONObject found = null;
         for (int i = 0; i < list.length(); i++) {
             JSONObject strategy = list.getJSONObject(i);
-            if (LAUNCHER.equals(strategy.optString("name", ""))) {
-                if (found != null) throw new IllegalStateException("duplicate launcherStrategy");
+            if (name.equals(strategy.optString("name", ""))) {
+                if (found != null) throw new IllegalStateException("duplicate " + name);
                 found = strategy;
             }
         }
-        if (found == null) throw new IllegalStateException("launcherStrategy is absent");
+        if (found == null) throw new IllegalStateException(name + " is absent");
         return found;
     }
 
-    private String withLauncherPackage(String raw, String pkg, boolean add) throws Exception {
+    private static JSONObject launcher(JSONObject top) throws Exception {
+        return strategy(top, LAUNCHER);
+    }
+
+    private String withPackage(String raw, String strategyName, String pkg, boolean add) throws Exception {
         JSONObject top = top(raw);
-        JSONObject launcher = launcher(top);
-        JSONArray packages = launcher.has("packages") ? launcher.getJSONArray("packages") : new JSONArray();
+        JSONObject target = strategy(top, strategyName);
+        JSONArray packages = target.has("packages") ? target.getJSONArray("packages") : new JSONArray();
         List<String> values = new ArrayList<String>();
         for (int i = 0; i < packages.length(); i++) values.add(packages.getString(i));
         if (add) {
             if (values.contains(pkg)) throw new GuardControl.ApiFailure(422, "package already allowlisted: " + pkg);
             values.add(pkg);
         } else {
-            if (!values.remove(pkg)) throw new GuardControl.ApiFailure(422, "package is not allowlisted: " + pkg);
+            if (!values.remove(pkg)) throw new GuardControl.ApiFailure(422, "package is not in " + strategyName + ": " + pkg);
         }
         JSONArray next = new JSONArray();
         for (int i = 0; i < values.size(); i++) next.put(values.get(i));
-        launcher.put("packages", next);
+        target.put("packages", next);
         return render(top, raw);
     }
 
@@ -246,24 +270,37 @@ final class InstallConfigControl {
         for (int i = 0; i < a.length(); i++) {
             JSONObject x = a.getJSONObject(i);
             JSONObject y = b.getJSONObject(i);
-            boolean isLauncher = LAUNCHER.equals(x.optString("name", ""));
-            if (!isLauncher) {
+            String name = x.optString("name", "");
+            Set<String> editable = editableFields(name);
+            if (editable == null) {
                 if (!x.toString().equals(y.toString()))
                     throw new IllegalStateException("strategy other than launcherStrategy changed: "
                             + x.optString("name", "?"));
                 continue;
             }
             if (!x.names().toString().equals(y.names().toString()))
-                throw new IllegalStateException("launcherStrategy gained or lost a field");
+                throw new IllegalStateException(name + " gained or lost a field");
             Iterator<String> names = x.keys();
             while (names.hasNext()) {
-                String name = names.next();
-                if ("packages".equals(name) || "enable".equals(name)) continue;
-                if (!String.valueOf(x.opt(name)).equals(String.valueOf(y.opt(name))))
-                    throw new IllegalStateException("launcherStrategy field changed: " + name);
+                String field = names.next();
+                if (editable.contains(field)) continue;
+                if (!String.valueOf(x.opt(field)).equals(String.valueOf(y.opt(field))))
+                    throw new IllegalStateException(name + " field changed: " + field);
             }
         }
         return proposed;
+    }
+
+    /**
+     * 允许改动的字段表。不在表里的 strategy 必须一字不动。
+     * launcherStrategy 沿用原设计（packages + enable）；
+     * 两个拦截名单只允许动 packages —— 往黑名单里加包名对本工具没有任何用处。
+     */
+    private static Set<String> editableFields(String name) {
+        if (LAUNCHER.equals(name)) return new HashSet<String>(Arrays.asList("packages", "enable"));
+        if (BLACKLIST.equals(name) || OVERDUE.equals(name))
+            return new HashSet<String>(Arrays.asList("packages"));
+        return null;
     }
 
     private static boolean keysEqual(JSONObject x, JSONObject y) {

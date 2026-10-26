@@ -1,9 +1,11 @@
 package app.ffalcontrol;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
@@ -21,6 +23,7 @@ import android.os.PowerManager;
 import android.util.Base64;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -60,6 +63,12 @@ public final class MainActivity extends Activity {
     private AppBootControl appBootControl;
     private InstallConfigControl installConfigControl;
     private ConfigControl configControl;
+    private PushInstall pushInstall;
+    private PolicyGuard policyGuard;
+    private PushServer pushServer;
+    private volatile String watchingJob;
+
+    private static final int REQUEST_PICK_APK = 4201;
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -67,6 +76,9 @@ public final class MainActivity extends Activity {
         appBootControl = new AppBootControl(this);
         installConfigControl = new InstallConfigControl(this);
         configControl = new ConfigControl(this);
+        policyGuard = new PolicyGuard(this);
+        pushInstall = new PushInstall(this);
+        pushServer = new PushServer(this, pushInstall);
         LinearLayout body = new LinearLayout(this);
         body.setOrientation(LinearLayout.VERTICAL);
         body.setBackgroundColor(Ui.BG);
@@ -78,13 +90,14 @@ public final class MainActivity extends Activity {
         LinearLayout header = Ui.row(this);
         header.addView(Ui.label(this, "TCL 净化", 30, Ui.LABEL, true),
                 new LinearLayout.LayoutParams(0, -2, 1));
-        header.addView(Ui.chip(this, "内置 " + BundledLauncher.LABEL, Ui.GREEN));
+        header.addView(Ui.chip(this, BundledLauncher.BUNDLED
+                ? "内置 " + BundledLauncher.LABEL : "通用版", Ui.GREEN));
         body.addView(header);
 
         LinearLayout.LayoutParams subtitleParams = new LinearLayout.LayoutParams(-1, -2);
         subtitleParams.topMargin = Ui.dp(this, 8);
         body.addView(Ui.label(this, "ffalcontrol v" + versionName
-                        + " · 只读诊断 + 厂商配置写入 · 接口仅 127.0.0.1:" + PORT,
+                        + " · 净化 + 推送安装 + 厂商策略判定 · 接口仅 127.0.0.1:" + PORT,
                 14, Ui.SECONDARY, false), subtitleParams);
 
         LinearLayout statusCard = new LinearLayout(this);
@@ -153,7 +166,31 @@ public final class MainActivity extends Activity {
             @Override public void onClick(View view) { showLauncherState(); }
         });
         launcherRow.addView(launcherState, Ui.weight(this));
+        if (!BundledLauncher.BUNDLED) installHome.setVisibility(View.GONE);
         body.addView(launcherRow, launcherParams);
+
+        LinearLayout pushRow = Ui.row(this);
+        LinearLayout.LayoutParams pushParams = new LinearLayout.LayoutParams(-1, -2);
+        pushParams.topMargin = Ui.dp(this, 12);
+
+        TextView pushButton = Ui.pill(this, "推送安装", Ui.PRIMARY);
+        pushButton.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) { showPushPanel(); }
+        });
+        pushRow.addView(pushButton, Ui.weight(this));
+
+        TextView pickButton = Ui.pill(this, "选包安装", 0);
+        pickButton.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) { pickApk(); }
+        });
+        pushRow.addView(pickButton, Ui.weight(this));
+
+        TextView preauthButton = Ui.pill(this, "预授权放行", 0);
+        preauthButton.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) { askPreauthorize(); }
+        });
+        pushRow.addView(preauthButton, Ui.weight(this));
+        body.addView(pushRow, pushParams);
 
         resultView = Ui.label(this, "", 14, Ui.ORANGE, false);
         resultView.setBackground(Ui.cardPlate(this));
@@ -180,11 +217,19 @@ public final class MainActivity extends Activity {
         new Thread(new Runnable() {
             @Override public void run() { serve(); }
         }, "TVControl-loopback").start();
+        pushServer.start();
         updateSummary();
     }
 
     @Override public void onBackPressed() { stopServer(); super.onBackPressed(); }
     @Override protected void onDestroy() { stopServer(); super.onDestroy(); }
+
+    private void stopServer() {
+        running = false;
+        ServerSocket socket = server;
+        if (socket != null) try { socket.close(); } catch (Exception ignored) { }
+        if (pushServer != null) pushServer.stop();
+    }
 
     private void showStatus(final String text) {
         runOnUiThread(new Runnable() {
@@ -429,10 +474,31 @@ public final class MainActivity extends Activity {
             }
         }
         if (badHeaders || chunked || length < 0) { respond(socket, 400, error("invalid_headers")); return; }
-        if (length > MAX_REQUEST) { respond(socket, 413, error("request_too_large")); return; }
+        // /push 的 body 是原始 APK 字节，单独给一个上限，不能套 JSON 的 64KB
+        boolean rawPush = first[0].equals("POST")
+                && (first[1].equals("/push") || first[1].startsWith("/push?"));
+        if (length > (rawPush ? PushInstall.MAX_APK : MAX_REQUEST)) {
+            respond(socket, 413, error(rawPush ? "apk_too_large" : "request_too_large"));
+            return;
+        }
         byte[] expected = ("Bearer " + BuildToken.value(MainActivity.this)).getBytes(StandardCharsets.UTF_8);
         byte[] supplied = authorization == null ? new byte[0] : authorization.getBytes(StandardCharsets.UTF_8);
         if (!MessageDigest.isEqual(expected, supplied)) { respond(socket, 401, error("unauthorized")); return; }
+
+        if (rawPush) {
+            socket.setSoTimeout(300000);
+            try {
+                JSONObject job = pushInstall.stage(in, queryParam(first[1], "name"), length, "api");
+                JSONObject out = new JSONObject(job.toString());
+                out.put("ok", true);
+                respond(socket, 200, out);
+            } catch (GuardControl.ApiFailure failure) {
+                respond(socket, failure.status, failure.result);
+            } catch (Throwable failure) {
+                respond(socket, 500, error("push_failed: " + describe(failure)));
+            }
+            return;
+        }
         boolean postGuard = first[1].equals("/guard");
         boolean postAppBoot = first[1].equals("/app-boot-policy");
         boolean postInstallConfig = first[1].equals("/install-config");
@@ -440,9 +506,14 @@ public final class MainActivity extends Activity {
         boolean postMsgDelete = first[1].equals("/cyberui-messages/delete");
         boolean postMsgInsert = first[1].equals("/cyberui-messages/insert");
         boolean postConfig = first[1].equals("/config-write");
+        boolean postPushAnalyze = first[1].equals("/push/analyze");
+        boolean postPushInstall = first[1].equals("/push/install");
+        boolean postPushPreauth = first[1].equals("/push/preauthorize");
+        boolean postPushDelete = first[1].equals("/push/delete");
         if (first[0].equals("POST")
                 && (postGuard || postAppBoot || postInstallConfig || postProvision
-                        || postMsgDelete || postMsgInsert || postConfig)) {
+                        || postMsgDelete || postMsgInsert || postConfig
+                        || postPushAnalyze || postPushInstall || postPushPreauth || postPushDelete)) {
             if (!hasLength || length == 0 || contentType == null
                     || !contentType.toLowerCase(Locale.ROOT).matches("application/json(\\s*;\\s*charset=utf-8)?")) {
                 respond(socket, 400, error((postGuard ? "guard" : postAppBoot ? "appboot"
@@ -460,13 +531,27 @@ public final class MainActivity extends Activity {
                     .onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(body)).toString(); }
             catch (Exception invalid) { respond(socket, 400, error("invalid_utf8")); return; }
             try {
-                JSONObject applied = postAppBoot ? appBootControl.apply(text)
-                        : postInstallConfig ? installConfigControl.apply(text)
-                        : postProvision ? provision(text)
-                        : postMsgDelete ? deleteCyberMessages(text)
-                        : postMsgInsert ? insertCyberMessage(text)
-                        : postConfig ? configControl.apply(text)
-                        : guardControl.apply(text);
+                JSONObject applied;
+                if (postPushAnalyze || postPushInstall || postPushPreauth || postPushDelete) {
+                    JSONObject payload = new JSONObject(text);
+                    applied = postPushAnalyze ? pushInstall.analyze(payload.optString("staged_id", ""))
+                            : postPushInstall ? pushInstall.install(MainActivity.this,
+                                    payload.optString("staged_id", ""),
+                                    payload.optBoolean("patch", true),
+                                    payload.optBoolean("rollback_on_failure", true),
+                                    payload.optString("origin", "tool"))
+                            : postPushPreauth ? pushInstall.preauthorize(
+                                    payload.optString("package", ""), payload.optBoolean("write", false))
+                            : deleteJob(payload.optString("staged_id", ""));
+                } else {
+                    applied = postAppBoot ? appBootControl.apply(text)
+                            : postInstallConfig ? installConfigControl.apply(text)
+                            : postProvision ? provision(text)
+                            : postMsgDelete ? deleteCyberMessages(text)
+                            : postMsgInsert ? insertCyberMessage(text)
+                            : postConfig ? configControl.apply(text)
+                            : guardControl.apply(text);
+                }
                 respond(socket, 200, applied);
             }
             catch (GuardControl.ApiFailure failure) { respond(socket, failure.status, failure.result); }
@@ -486,12 +571,25 @@ public final class MainActivity extends Activity {
             result.put("install_config_api", true);
             result.put("provision_api", true);
             result.put("launcher_api", true);
-            result.put("bundled_launcher", BundledLauncher.TARGET);
+            result.put("bundled_launcher", BundledLauncher.BUNDLED ? BundledLauncher.TARGET : JSONObject.NULL);
+            result.put("push_install_api", true);
+            result.put("security_policy_api", true);
+            result.put("lan_upload_port", PushServer.PORT);
+            result.put("lan_upload_running", pushServer.running());
+            result.put("lan_address", PushServer.lanAddress() == null
+                    ? JSONObject.NULL : PushServer.lanAddress());
             result.put("provision_payload_version", ProvisionPayload.VERSION);
             result.put("version", "5.4-one-click"); result.put("uid", android.os.Process.myUid());
             result.put("bound_address", "127.0.0.1"); result.put("port", PORT);
-        } else if (first[1].equals("/snapshot")) result = snapshot();
+        }         else if (first[1].equals("/snapshot")) result = snapshot();
         else if (first[1].equals("/launcher")) result = BundledLauncher.state(this);
+        else if (first[1].equals("/security/policies")) result = policyGuard.describe();
+        else if (first[1].equals("/push/info")) result = pushInfo();
+        else if (first[1].equals("/push/jobs")) result = pushJobs(30);
+        else if (first[1].startsWith("/push/jobs/")) {
+            try { result = pushInstall.job(first[1].substring("/push/jobs/".length())); }
+            catch (GuardControl.ApiFailure failure) { respond(socket, failure.status, failure.result); return; }
+        }
         else if (first[1].equals("/focus")) result = readProvider(FOCUS, null);
         else if (first[1].equals("/app-boot-policy")) result = appBootControl.current();
         else if (first[1].equals("/install-config")) result = installConfigControl.current();
@@ -509,14 +607,6 @@ public final class MainActivity extends Activity {
             catch (GuardControl.ApiFailure failure) { respond(socket, failure.status, failure.result); return; }
         } else { respond(socket, 404, error("not_found")); return; }
         respond(socket, 200, result);
-    }
-
-    /** 恢复出厂后的一键恢复：Guard 清单 + launcher 白名单，全部走 app 内 ContentResolver。 */
-
-    private void stopServer() {
-        running = false;
-        ServerSocket socket = server;
-        if (socket != null) try { socket.close(); } catch (Exception ignored) { }
     }
 
     /** 纯代码界面：结果一律黑底黄字，避免主题缺省色导致不可见。 */
@@ -540,6 +630,353 @@ public final class MainActivity extends Activity {
     }
 
     /** 系统里的 HOME 角色/默认桌面设置页，由 PermissionController 提供。 */
+    // ---------------------------------------------------------------- 推送安装
+
+    private static String queryParam(String target, String key) {
+        int q = target.indexOf('?');
+        if (q < 0) return null;
+        for (String pair : target.substring(q + 1).split("&")) {
+            int eq = pair.indexOf('=');
+            if (eq <= 0 || !key.equals(pair.substring(0, eq))) continue;
+            try { return java.net.URLDecoder.decode(pair.substring(eq + 1), "UTF-8"); }
+            catch (Throwable ignored) { return null; }
+        }
+        return null;
+    }
+
+    private JSONObject deleteJob(String id) throws Exception {
+        pushInstall.delete(id);
+        JSONObject out = new JSONObject();
+        out.put("deleted", id);
+        return out;
+    }
+
+    private JSONObject pushJobs(int limit) throws Exception {
+        JSONObject out = new JSONObject();
+        out.put("jobs", pushInstall.jobs(limit));
+        return out;
+    }
+
+    private JSONObject pushInfo() throws Exception {
+        JSONObject out = new JSONObject();
+        out.put("lan_address", PushServer.lanAddress() == null
+                ? JSONObject.NULL : PushServer.lanAddress());
+        out.put("lan_port", PushServer.PORT);
+        out.put("lan_running", pushServer.running());
+        out.put("hint", PushServer.hint());
+        out.put("max_bytes", PushInstall.MAX_APK);
+        JSONArray endpoints = new JSONArray();
+        endpoints.put("POST /push?name=x.apk  （body 就是 APK 字节，需要 Bearer）");
+        endpoints.put("POST /push/analyze  {staged_id}");
+        endpoints.put("POST /push/install  {staged_id, patch, rollback_on_failure}");
+        endpoints.put("POST /push/preauthorize  {package, write}");
+        endpoints.put("POST /push/delete  {staged_id}");
+        endpoints.put("GET  /push/jobs | /push/jobs/<id> | /security/policies");
+        out.put("endpoints", endpoints);
+        return out;
+    }
+
+    /** 「推送安装」：先告诉用户地址，再列出待安装的包让他挑。 */
+    private void showPushPanel() {
+        showResult("正在读取待安装列表 …");
+        new Thread(new Runnable() {
+            @Override public void run() {
+                try {
+                    final JSONArray jobs = pushInstall.jobs(8);
+                    final StringBuilder info = new StringBuilder();
+                    info.append("推送安装\n\n").append(PushServer.hint()).append("\n\n");
+                    info.append("本页只能收文件，安装要在电视上点。\n");
+                    if (jobs.length() == 0) {
+                        info.append("\n还没有收到安装包。用手机传一个，或点「选包安装」。");
+                    }
+                    runOnUiThread(new Runnable() {
+                        @Override public void run() {
+                            if (isFinishing()) return;
+                            showResult(info.toString());
+                            if (jobs.length() > 0) showJobPicker(jobs);
+                        }
+                    });
+                } catch (Throwable failure) {
+                    showResult("读取任务失败：" + describe(failure));
+                }
+            }
+        }).start();
+    }
+
+    private void showJobPicker(final JSONArray jobs) {
+        final String[] names = new String[jobs.length()];
+        for (int i = 0; i < jobs.length(); i++) {
+            JSONObject job = jobs.optJSONObject(i);
+            String state = job.optString("state", "");
+            names[i] = job.optString("file_name", "?") + "  ·  " + stateLabel(state);
+        }
+        new AlertDialog.Builder(this)
+                .setTitle("选一个开始安装")
+                .setItems(names, new DialogInterface.OnClickListener() {
+                    @Override public void onClick(DialogInterface dialog, int which) {
+                        JSONObject job = jobs.optJSONObject(which);
+                        if (job != null) confirmAndInstall(job.optString("id"));
+                    }
+                })
+                .setNegativeButton("关闭", null)
+                .show();
+    }
+
+    private static String stateLabel(String state) {
+        if (PushInstall.S_STAGED.equals(state)) return "待判定";
+        if (PushInstall.S_ANALYZED.equals(state)) return "已判定";
+        if (PushInstall.S_PATCHED.equals(state)) return "已改配置";
+        if (PushInstall.S_INSTALLING.equals(state)) return "安装中";
+        if (PushInstall.S_SUCCESS.equals(state)) return "已安装";
+        if (PushInstall.S_FAILED.equals(state)) return "失败";
+        return state;
+    }
+
+    /** 判定 → 展示结论 → 确认后安装。 */
+    private void confirmAndInstall(final String id) {
+        showResult("正在判定这个包会被哪条厂商策略拦 …");
+        new Thread(new Runnable() {
+            @Override public void run() {
+                try {
+                    final JSONObject job = pushInstall.analyze(id);
+                    final JSONObject analysis = job.getJSONObject("analysis");
+                    runOnUiThread(new Runnable() {
+                        @Override public void run() {
+                            if (isFinishing()) return;
+                            showResult(describeAnalysis(analysis));
+                            JSONArray patches = analysis.optJSONArray("patches");
+                            boolean needsPatch = patches != null && patches.length() > 0;
+                            new AlertDialog.Builder(MainActivity.this)
+                                    .setTitle(needsPatch ? "先改配置再安装？" : "开始安装？")
+                                    .setMessage(needsPatch
+                                            ? analysis.optString("package") + "\n\n将修改 " + patches.length()
+                                                    + " 处厂商配置（已自动备份，可回滚），然后调起系统安装框。"
+                                            : analysis.optString("package") + "\n\n直接调起系统安装框。")
+                                    .setPositiveButton(needsPatch ? "改配置并安装" : "安装",
+                                            new DialogInterface.OnClickListener() {
+                                                @Override public void onClick(DialogInterface dialog, int which) {
+                                                    installJob(id, needsPatch);
+                                                }
+                                            })
+                                    .setNegativeButton("取消", null)
+                                    .show();
+                        }
+                    });
+                } catch (Throwable failure) {
+                    showResult("判定失败：" + describe(failure));
+                }
+            }
+        }).start();
+    }
+
+    private void installJob(String id, boolean patch) {
+        try {
+            watchingJob = id;
+            pushInstall.install(this, id, patch, true, "tool");
+            showResult("已提交安装任务，等待系统确认框 …");
+            watchJob(id);
+        } catch (Throwable failure) {
+            showResult("无法开始安装：" + describe(failure));
+        }
+    }
+
+    /** 轮询任务状态直到终态。 */
+    private void watchJob(final String id) {
+        final android.os.Handler handler = new android.os.Handler(getMainLooper());
+        handler.postDelayed(new Runnable() {
+            @Override public void run() {
+                if (isFinishing() || !id.equals(watchingJob)) return;
+                try {
+                    JSONObject job = pushInstall.job(id);
+                    String state = job.optString("state");
+                    showResult(describeJob(job));
+                    if (PushInstall.S_SUCCESS.equals(state) || PushInstall.S_FAILED.equals(state)) {
+                        watchingJob = null;
+                        return;
+                    }
+                } catch (Throwable ignored) {
+                    // 任务可能刚被清理，停掉轮询
+                    return;
+                }
+                handler.postDelayed(this, 1000);
+            }
+        }, 600);
+    }
+
+    private static String describeAnalysis(JSONObject analysis) {
+        StringBuilder text = new StringBuilder();
+        text.append(analysis.optString("label", "（无名称）"))
+                .append("\n").append(analysis.optString("package", "?"));
+        String version = analysis.optString("version_name", "");
+        if (version.length() > 0) text.append("  v").append(version);
+        text.append("\n").append(String.format(Locale.ROOT, "%.1f MB",
+                analysis.optLong("bytes") / 1048576.0));
+        if (analysis.optBoolean("declares_home")) {
+            text.append(" · 桌面类").append(analysis.optBoolean("tcl_signed") ? "（TCL 签名）" : "（第三方）");
+        }
+
+        JSONArray hits = analysis.optJSONArray("hits");
+        if (hits == null || hits.length() == 0) {
+            text.append("\n\n判定：不会被任何厂商策略拦，可直接装。");
+        } else {
+            text.append("\n\n判定：会被 ").append(hits.length()).append(" 条策略拦 ——");
+            for (int i = 0; i < hits.length(); i++) {
+                JSONObject hit = hits.optJSONObject(i);
+                if (hit == null) continue;
+                text.append("\n· ").append(hit.optString("strategy"))
+                        .append("：").append(hit.optString("reason"))
+                        .append("\n  → ").append(hit.optString("fix"));
+            }
+        }
+
+        JSONObject installed = analysis.optJSONObject("installed");
+        if (installed != null && installed.optBoolean("present")) {
+            text.append("\n\n已装同名包 v").append(installed.optInt("version_code"));
+            if (!installed.optBoolean("same_signature", true)) {
+                text.append("，但签名不同 → 必须先卸载旧版");
+            } else if (installed.optBoolean("downgrade")) {
+                text.append("，且这是降级安装");
+            }
+        }
+        if (!analysis.optBoolean("policy_loaded", true)) {
+            text.append("\n\n注意：没读到 InstallConfig，判定按默认值推测。");
+        }
+        return text.toString();
+    }
+
+    private static String describeJob(JSONObject job) {
+        StringBuilder text = new StringBuilder();
+        text.append("任务 ").append(job.optString("id")).append("\n");
+        text.append("状态：").append(stateLabel(job.optString("state"))).append("\n");
+        String message = job.optString("message", "");
+        if (message.length() > 0) text.append("\n").append(message).append("\n");
+        JSONArray log = job.optJSONArray("log");
+        if (log != null && log.length() > 0) {
+            text.append("\n进度：\n");
+            int from = Math.max(0, log.length() - 8);
+            for (int i = from; i < log.length(); i++) {
+                text.append("· ").append(log.optString(i)).append("\n");
+            }
+        }
+        JSONObject post = job.optJSONObject("post_check");
+        if (post != null) {
+            text.append("\n装后检查：");
+            if (post.optBoolean("resolvable")) {
+                text.append("已装 v").append(post.optString("version_name", "?"));
+                text.append(post.optBoolean("enabled") ? "，启用中" : "，但被禁用");
+                text.append(post.optBoolean("launchable") ? "，可启动" : "，无可启动入口");
+            } else {
+                text.append("查不到该包，可能被 guard 立即禁用，冷启动后复查");
+            }
+        }
+        return text.toString();
+    }
+
+    /** 「选包安装」：走系统文件选择器，不依赖网络。 */
+    private void pickApk() {
+        try {
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("*/*");
+            intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{
+                    "application/vnd.android.package-archive", "application/octet-stream",
+                    "application/zip"});
+            startActivityForResult(intent, REQUEST_PICK_APK);
+            showResult("已打开文件选择器，选一个 APK。\n如果系统没装文件选择器，请改用「推送安装」。");
+        } catch (Throwable failure) {
+            showResult("打不开文件选择器：" + describe(failure) + "\n请改用「推送安装」。");
+        }
+    }
+
+    @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != REQUEST_PICK_APK || resultCode != RESULT_OK || data == null) return;
+        final Uri uri = data.getData();
+        if (uri == null) return;
+        showResult("正在读取选中的文件 …");
+        new Thread(new Runnable() {
+            @Override public void run() {
+                InputStream in = null;
+                try {
+                    in = getContentResolver().openInputStream(uri);
+                    if (in == null) throw new IllegalStateException("拿不到文件流");
+                    JSONObject job = pushInstall.stage(in, displayName(uri), -1, "picker");
+                    runOnUiThread(new Runnable() {
+                        @Override public void run() { }
+                    });
+                    confirmAndInstall(job.optString("id"));
+                } catch (Throwable failure) {
+                    showResult("读取失败：" + describe(failure)
+                            + "\n若提示 SELinux/权限，请改用「推送安装」。");
+                } finally {
+                    try { if (in != null) in.close(); } catch (Throwable ignored) { }
+                }
+            }
+        }).start();
+    }
+
+    private String displayName(Uri uri) {
+        try {
+            android.database.Cursor cursor = getContentResolver()
+                    .query(uri, new String[]{android.provider.OpenableColumns.DISPLAY_NAME}, null, null, null);
+            if (cursor != null) {
+                try {
+                    if (cursor.moveToFirst()) {
+                        String name = cursor.getString(0);
+                        if (name != null && name.length() > 0) return name;
+                    }
+                } finally {
+                    try { cursor.close(); } catch (Throwable ignored) { }
+                }
+            }
+        } catch (Throwable ignored) { }
+        String last = uri.getLastPathSegment();
+        return last == null ? "picked.apk" : last;
+    }
+
+    /** 「预授权放行」：只有包名也能先把路打通。 */
+    private void askPreauthorize() {
+        final EditText input = new EditText(this);
+        input.setHint("例如 com.example.app");
+        input.setSingleLine(true);
+        input.setTextColor(Ui.LABEL);
+        input.setHintTextColor(Ui.TERTIARY);
+        input.setPadding(Ui.dp(this, 20), Ui.dp(this, 12), Ui.dp(this, 20), Ui.dp(this, 12));
+        new AlertDialog.Builder(this)
+                .setTitle("预授权放行")
+                .setMessage("输入包名后，会把它加进桌面放行名单、并从拦截名单里移出。\n"
+                        + "注意：这一步只放行，不会安装任何东西。")
+                .setView(input)
+                .setPositiveButton("放行", new DialogInterface.OnClickListener() {
+                    @Override public void onClick(DialogInterface dialog, int which) {
+                        runPreauthorize(input.getText().toString().trim());
+                    }
+                })
+                .setNegativeButton("取消", null)
+                .show();
+    }
+
+    private void runPreauthorize(final String pkg) {
+        if (!SecurityGate.validPackageName(pkg)) {
+            showResult("不是合法的包名：" + pkg + "\n包名形如 com.example.app，必须带至少一个点。");
+            return;
+        }
+        showResult("正在为 " + pkg + " 写放行配置 …");
+        new Thread(new Runnable() {
+            @Override public void run() {
+                try {
+                    JSONObject result = pushInstall.preauthorize(pkg, true);
+                    showResult("预授权完成：" + pkg
+                            + "\n改动 " + result.optJSONArray("applied").length() + " 处"
+                            + (result.optBoolean("ok") ? "" : "（有失败项）")
+                            + "\n\n之后安装这个包不会再被厂商策略拦。");
+                } catch (Throwable failure) {
+                    showResult("预授权失败：" + describe(failure));
+                }
+            }
+        }).start();
+    }
+
     /** 装内置桌面：白名单 → 安装（assets 里那份）→ 申请 HOME 角色，一条链走完。 */
     private void installBundledLauncher() {
         showResult("第 1/3 步：把 " + BundledLauncher.TARGET + " 加入安装白名单 …");
