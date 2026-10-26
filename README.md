@@ -29,7 +29,7 @@
 | `ffalcontrol-0.3.0-emotnui.apk` | Emotn UI 1.1.0.2 | `com.oversea.aslauncher` | ~14 MB |
 | `ffalcontrol-0.3.0-universal.apk` | **无**（自带推送安装） | — | ~90 KB |
 
-去 [Releases](../../releases) 下载。
+下载：[Releases](../../releases)（原版），或 [介绍页直连镜像](https://mmaotv.github.io/ffalcontrol-tcl/)（GitHub Pages，国内可达）。
 
 不知道选哪个：**已经装好桌面就选 universal**，还没装就挑一套喜欢的桌面，三个内置版里同样带推送安装。
 
