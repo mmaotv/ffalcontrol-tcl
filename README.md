@@ -63,7 +63,7 @@
 
 **⛔ 不要装**：非 MT96 平台的旧 TCL（Amlogic / 海思方案）、海外版 Google TV 固件、其它品牌（小米 / 海信 / 华为）——机制完全不同。
 
-装之前可以先自查，在电视的终端（或任意一台能跑 shell 的设备上 `adb shell`）执行：
+拿不准的话，如果能进到电视的 shell（`adb shell` 或电视上的终端），跑这两条确认：
 
 ```sh
 getprop ro.board.platform      # 应为 MT9655 / MT9653
