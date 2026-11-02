@@ -56,10 +56,10 @@ fi
 TOKEN="${TOKEN:-0e8344e8b70b4f95e48e887c912a8f35ad1e4a37b92f290b031f8dca7b6224c7}"
 if [ "$TOKEN" = "random" ]; then TOKEN=""; fi
 
-OUT="ffalcontrol-0.3.0-${TAG}.apk"
+OUT="ffalcontrol-0.4.0-${TAG}.apk"
 
 rm -rf build
-mkdir -p build/classes build/dex build/gen/app/ffalcontrol build/assets dist
+mkdir -p build/classes build/dex build/gen/app/ffalcontrol build/assets build/res dist
 
 cat > build/gen/app/ffalcontrol/LauncherSpec.java <<SPEC
 package app.ffalcontrol;
@@ -86,7 +86,9 @@ fi
 "$JAVA_HOME/bin/java" -cp "$BT/lib/d8.jar" com.android.tools.r8.D8 \
     --lib "$AJ" --min-api 28 --output build/dex build/classes/app/ffalcontrol/*.class
 
-"$BT/aapt2" link -o build/base.apk -I "$AJ" -A build/assets --manifest build/AndroidManifest.xml
+"$BT/aapt2" compile --dir res -o build/res
+
+"$BT/aapt2" link -o build/base.apk -I "$AJ" -A build/assets --manifest build/AndroidManifest.xml build/res/*.flat
 
 cp build/dex/classes.dex build/classes.dex
 if command -v zip >/dev/null 2>&1; then

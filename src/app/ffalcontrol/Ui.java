@@ -22,6 +22,8 @@ final class Ui {
     static final int SECONDARY   = Color.parseColor("#99EBEBF5");
     static final int TERTIARY    = Color.parseColor("#4DEBEBF5");
     static final int GLASS       = Color.parseColor("#E6202022");
+    /** 弹窗底板：比卡片更实一点，正文压在上面才看得清 */
+    static final int PANEL       = Color.parseColor("#F2171719");
     static final int FILL        = Color.parseColor("#2E787880");
     static final int FILL_STRONG = Color.parseColor("#52787880");
     static final int HAIRLINE    = Color.parseColor("#1AFFFFFF");
@@ -102,6 +104,35 @@ final class Ui {
     /** 卡片底色（毛玻璃 + hairline）。 */
     static GradientDrawable cardPlate(Context context) {
         return plate(GLASS, HAIRLINE, dp(context, 22));
+    }
+
+    /** 弹窗底板：比卡片更大的圆角，暗色毛玻璃，和主界面同一套材质。 */
+    static GradientDrawable panel(Context context) {
+        return plate(PANEL, HAIRLINE, dp(context, 28));
+    }
+
+    /**
+     * 菜单行：左对齐文字，聚焦时整行反白。
+     * 和药丸按钮的区别是「列表项」而不是「按钮」，用在「更多」这类次级菜单里。
+     */
+    static TextView menuRow(Context context, CharSequence text) {
+        TextView row = new TextView(context);
+        row.setText(text);
+        row.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        row.setTypeface(android.graphics.Typeface.create(TEXT, android.graphics.Typeface.NORMAL));
+        row.setTextColor(new ColorStateList(
+                new int[][]{new int[]{android.R.attr.state_focused}, new int[]{}},
+                new int[]{ON_FOCUS, LABEL}));
+        StateListDrawable states = new StateListDrawable();
+        states.addState(new int[]{android.R.attr.state_focused},
+                plate(FOCUS, 0, dp(context, 16)));
+        states.addState(new int[]{}, plate(0x14FFFFFF, HAIRLINE, dp(context, 16)));
+        row.setBackground(states);
+        row.setPadding(dp(context, 20), dp(context, 13), dp(context, 20), dp(context, 13));
+        row.setFocusable(true);
+        row.setFocusableInTouchMode(true);
+        row.setClickable(true);
+        return row;
     }
 
     /** 右上角小标签：胶囊底 + 彩色字。 */

@@ -112,9 +112,22 @@ curl -s -X POST -H "Authorization: Bearer $TOK" -H "Content-Type: application/js
      -d '{"package":"com.example.app","write":true}' $B/push/preauthorize
 ```
 
-端点：`/health` `/snapshot` `/launcher` `/security/policies` `/push/info` `/push/jobs` `/push/jobs/<id>` `/push` `/push/analyze` `/push/install` `/push/preauthorize` `/push/delete` `/install-config` `/app-boot-policy` `/provision` `/settings` `/settings-all` `/pkg/<包名>` `/backups` `/guard` `/config-write` `/cyberui-messages`
+端点：`/health` `/snapshot` `/launcher` `/launcher/update` `/security/policies` `/push/info` `/push/jobs` `/push/jobs/<id>` `/push` `/push/analyze` `/push/install` `/push/preauthorize` `/push/delete` `/install-config` `/app-boot-policy` `/provision` `/settings` `/settings-all` `/pkg/<包名>` `/backups` `/guard` `/config-write` `/cyberui-messages`
 
 令牌默认固定在构建里（方便没有 adb 的环境用脚本驱动）；想改回运行时随机生成，构建时传 `TOKEN=random`。
+
+## 桌面更新是怎么取版本的
+
+两个桌面的发行方式不同，所以不能用同一个接口硬套：
+
+| 桌面 | 接口 | 挑包规则 |
+|---|---|---|
+| Aerial | `api.github.com/repos/pengchujin/aerial-tv/releases/latest` | 资产名精确等于 `aerial-standard.apk`；只认标准版，guard 版是另一套接管方式，本工具不用 |
+| CleanYourTV | `api.github.com/repos/mmaotv/AerialToolbox/releases?per_page=30` | tag 以 `cyt-v` 开头、资产名以 `CleanYourTV-` 开头；**这个仓库同时挂着工具箱自己的 `v1.3.x` 和手机端 `phone-v*`**，用 `releases/latest` 会拿错 |
+
+拿到版本号后按数字段比较（`VersionText.compare`，纯文本逻辑，可脱离 Android 跑 JVM 自测）。
+
+安装仍然走 `ApkInstaller` 的自有会话，而不是 `Intent.ACTION_VIEW` 交给系统安装器 —— 这是「不触发 thridStrategy」的前提，桌面更新和首次安装共用同一条路径。
 
 ## 与上游的差异
 

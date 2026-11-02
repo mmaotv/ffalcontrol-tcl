@@ -12,8 +12,11 @@ public final class SelfTest {
     private static int failures;
 
     public static void main(String[] args) throws Exception {
+        versionScenarios();
         if (args.length == 0) {
-            System.out.println("用法: SelfTest <apk> [<apk> ...]");
+            System.out.println("\n（没给 APK 路径，跳过清单解析）");
+            System.out.println(failures == 0 ? "\n全部通过" : "\n失败 " + failures + " 项");
+            if (failures != 0) System.exit(1);
             return;
         }
         for (String path : args) {
@@ -36,6 +39,22 @@ public final class SelfTest {
         policyScenarios();
         System.out.println(failures == 0 ? "\n全部通过" : "\n失败 " + failures + " 项");
         if (failures != 0) System.exit(1);
+    }
+
+    /** 桌面更新的版本比较：纯文本逻辑，不需要真机 */
+    private static void versionScenarios() {
+        System.out.println("=== 版本比较");
+        check("1.56 比 1.52 新", VersionText.compare("1.56", "1.52") > 0);
+        check("v3.3.0 比 3.0.0 新", VersionText.compare("v3.3.0", "3.0.0") > 0);
+        check("3.0.0 与 v3.0.0 相同", VersionText.compare("3.0.0", "v3.0.0") == 0);
+        check("1.2 与 1.2.0 相同（缺段按 0）", VersionText.compare("1.2", "1.2.0") == 0);
+        check("段内是数字比较：3.10 > 3.9", VersionText.compare("3.10", "3.9") > 0);
+        check("反向比较为负", VersionText.compare("1.52", "1.56") < 0);
+        check("空版本不误判成有更新",
+                VersionText.compare("", "3.3.0") == 0 && VersionText.compare(null, "1.0") == 0);
+        check("normalize 去掉 v 与空白", "3.3.0".equals(VersionText.normalize(" v3.3.0 ")));
+        check("最多取四段数字", VersionText.digits("1.2.3.4.5").length == 4);
+        check("带后缀的版本号只取数字", VersionText.compare("1.0-beta2", "1.0-beta1") > 0);
     }
 
     private static void policyScenarios() {

@@ -240,31 +240,31 @@ footer{border-top:1px solid var(--line);padding:42px 0 56px;margin-top:26px}
       以后想换桌面，直接装另一个覆盖上去就行，不用先卸载。
     </p>
     <div class="dl">
-      <a class="pkg rec" href="https://mmaotv.github.io/ffalcontrol-tcl/apk/ffalcontrol-0.3.0-universal.apk">
+      <a class="pkg rec" href="https://mmaotv.github.io/ffalcontrol-tcl/apk/ffalcontrol-0.4.0-universal.apk">
         <div class="kicker">推荐 · 已有桌面选这个</div>
         <div class="name">通用版</div>
-        <div class="size">90 KB</div>
+        <div class="size">137 KB</div>
         <div class="desc">不内置桌面。只做去广告和装包，体积最小。</div>
         <span class="go">下载</span>
       </a>
-      <a class="pkg" href="https://mmaotv.github.io/ffalcontrol-tcl/apk/ffalcontrol-0.3.0-aerial.apk">
+      <a class="pkg" href="https://mmaotv.github.io/ffalcontrol-tcl/apk/ffalcontrol-0.4.0-aerial.apk">
         <div class="kicker">桌面一 · 好看</div>
         <div class="name">Aerial</div>
         <div class="size">3 MB</div>
         <div class="desc">苹果电视那种风格，天气时钟 + 自定义壁纸。</div>
         <span class="go">下载</span>
       </a>
-      <a class="pkg" href="https://mmaotv.github.io/ffalcontrol-tcl/apk/ffalcontrol-0.3.0-cleanyourtv.apk">
+      <a class="pkg" href="https://mmaotv.github.io/ffalcontrol-tcl/apk/ffalcontrol-0.4.0-cleanyourtv.apk">
         <div class="kicker">桌面二 · 极简</div>
         <div class="name">CleanYourTV</div>
-        <div class="size">0.6 MB</div>
+        <div class="size">673 KB</div>
         <div class="desc">只有应用和直播入口，一个推荐位都没有。</div>
         <span class="go">下载</span>
       </a>
-      <a class="pkg" href="https://mmaotv.github.io/ffalcontrol-tcl/apk/ffalcontrol-0.3.0-emotnui.apk">
+      <a class="pkg" href="https://mmaotv.github.io/ffalcontrol-tcl/apk/ffalcontrol-0.4.0-emotnui.apk">
         <div class="kicker">桌面三 · 影视墙</div>
         <div class="name">Emotn UI</div>
-        <div class="size">14 MB</div>
+        <div class="size">13 MB</div>
         <div class="desc">海报卡片式，可换主题，像流媒体首页。</div>
         <span class="go">下载</span>
       </a>
@@ -289,7 +289,7 @@ footer{border-top:1px solid var(--line);padding:42px 0 56px;margin-top:26px}
       </div>
       <div class="step">
         <div class="n">2</div>
-        <h4>点「装内置桌面」</h4>
+        <h4>点「装桌面」</h4>
         <p>打开应用，遥控器选中这个按钮按确定。它会自动做完三件事：放行、装桌面、弹框问你要不要设为默认桌面 —— 选「确定」。</p>
       </div>
       <div class="step">
@@ -300,13 +300,19 @@ footer{border-top:1px solid var(--line);padding:42px 0 56px;margin-top:26px}
     </div>
     <div class="shots">
       <div class="shot">
-        <img src="shots/main-aerial.png" alt="工具主界面：一屏就是全部功能，遥控器上下左右操作" loading="lazy">
-        <div class="cap"><strong style="color:var(--fg)">主界面就这一屏。</strong>下面是三排按钮，遥控器上下左右就够，不用记路径。</div>
+        <img src="shots/main-0.4.png" alt="工具主界面：只有两个大按钮和一排次要入口，遥控器上下左右就够" loading="lazy">
+        <div class="cap"><strong style="color:var(--fg)">主界面只留两个按钮。</strong>「一键净化」和「装桌面」并排，其余都收进「更多」，遥控器乱按也点不坏。</div>
       </div>
       <div class="shot">
-        <img src="shots/push-analysis.png" alt="装包之前先告诉你这个包会不会被拦，以及准备怎么处理" loading="lazy">
-        <div class="cap"><strong style="color:var(--fg)">装之前先告诉你结果。</strong>这个包会不会被拦、它准备怎么处理，都写在卡片上，你点头才动手。</div>
+        <img src="shots/guide.png" alt="首次打开会自动弹出一份三分钟上手指南" loading="lazy">
+        <div class="cap"><strong style="color:var(--fg)">第一次打开先看指南。</strong>三步怎么点、装完为什么必须断电、常见问题，都在这一个弹窗里。</div>
       </div>
+    </div>
+    <div class="notice" style="border-color:var(--line);background:rgba(255,255,255,.025)">
+      <h4 style="color:var(--fg)">桌面有新版了？点「桌面更新」</h4>
+      <p>内置的桌面是打包时的那一版，之后上游发了新版，不用重新下载整个安装包：进应用点
+        <strong style="color:var(--fg)">桌面更新</strong>，它会查出线上最新版、下载、然后用同一个「自带安装会话」装上去，净化配置一点不动。
+        CleanYourTV 上游只发源码不发 APK，这里用的是我们自己代构建的发行版；Aerial 直接取上游 Release。</p>
     </div>
     <div class="notice" style="border-color:var(--line);background:rgba(255,255,255,.025)">
       <h4 style="color:var(--fg)">开机后如果又跳回原来的桌面</h4>

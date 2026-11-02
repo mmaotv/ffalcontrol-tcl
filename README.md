@@ -11,11 +11,11 @@
 那页有截图、兼容性表和四个包的直连下载，比 README 好读。GitHub Pages 偶尔抽风打不开就走 [Releases](../../releases)。
 
 <p align="center">
-  <img src="docs/shots/main-aerial.png" width="49%" alt="内置版主界面">
-  <img src="docs/shots/push-analysis.png" width="49%" alt="推送安装的策略判定">
+  <img src="docs/shots/main-0.4.png" width="49%" alt="主界面：两个主操作 + 一排次要入口">
+  <img src="docs/shots/guide.png" width="49%" alt="首次打开自动弹出的三分钟上手指南">
 </p>
 
-<p align="center"><sub>实机截图：左 = 主界面（一块面板，遥控器走完）；右 = 装包前先告诉你会被哪条厂商策略拦</sub></p>
+<p align="center"><sub>实机截图：左 = 主界面（只留两个主操作，其余收进「更多」）；右 = 首次打开自动弹出的使用指南</sub></p>
 
 ## 它解决什么
 
@@ -34,22 +34,37 @@
 
 | 变体 | 内置桌面 | 体积 | 适合谁 |
 |---|---|---|---|
-| **universal** · [下载](https://github.com/mmaotv/ffalcontrol-tcl/releases/download/v0.3.0/ffalcontrol-0.3.0-universal.apk) | 无 | ~90 KB | **已经装好桌面的人**，只要净化和放行 |
-| **cleanyourtv** · [下载](https://github.com/mmaotv/ffalcontrol-tcl/releases/download/v0.3.0/ffalcontrol-0.3.0-cleanyourtv.apk) | CleanYourTV 3.0.0 | ~0.6 MB | 想要极简、无推荐位的桌面 |
-| **aerial** · [下载](https://github.com/mmaotv/ffalcontrol-tcl/releases/download/v0.3.0/ffalcontrol-0.3.0-aerial.apk) | Aerial 1.56 | ~3 MB | tvOS 风格，推荐首选 |
-| **emotnui** · [下载](https://github.com/mmaotv/ffalcontrol-tcl/releases/download/v0.3.0/ffalcontrol-0.3.0-emotnui.apk) | Emotn UI 1.1.0.2 | ~14 MB | 影视海报墙风格 |
+| **universal** · [下载](https://github.com/mmaotv/ffalcontrol-tcl/releases/download/v0.4.0/ffalcontrol-0.4.0-universal.apk) | 无 | ~137 KB | **已经装好桌面的人**，只要净化和放行 |
+| **cleanyourtv** · [下载](https://github.com/mmaotv/ffalcontrol-tcl/releases/download/v0.4.0/ffalcontrol-0.4.0-cleanyourtv.apk) | CleanYourTV 3.0 | ~673 KB | 想要极简、无推荐位的桌面 |
+| **aerial** · [下载](https://github.com/mmaotv/ffalcontrol-tcl/releases/download/v0.4.0/ffalcontrol-0.4.0-aerial.apk) | Aerial 1.56 | ~3 MB | tvOS 风格，推荐首选 |
+| **emotnui** · [下载](https://github.com/mmaotv/ffalcontrol-tcl/releases/download/v0.4.0/ffalcontrol-0.4.0-emotnui.apk) | Emotn UI 1.1.0.2 | ~13 MB | 影视海报墙风格 |
 
 直连下载（国内更快）：[介绍页](https://mmaotv.github.io/ffalcontrol-tcl/#download) 四个按钮各自对应一个包。
 
 ## 三步用起来
 
 1. **装上去** —— APK 拷 U 盘插电视，用电视上的文件管理器点开装；首次会问「允许安装未知应用」。
-2. **点一个按钮** —— 打开应用，点「装内置桌面 · XXX」，它会依次做完：写安装白名单 → 从包内流式安装桌面 → 申请默认桌面。
+2. **点一个按钮** —— 打开应用，点「装桌面」，它会依次做完：写安装白名单 → 从包内流式安装桌面 → 申请默认桌面。
 3. **拔插头 30 秒再上电** —— 包级禁用由 `com.tcl.guard` 在开机时执行，不冷启动不生效。
 
 开机后如果厂商桌面抢了一次前台，按一下 **Home** 键就回到新桌面（固件在 `systemReady` 时硬编码拉起一次 `com.tcl.cyberui`，改不了）。
 
+**桌面想升级？** 点「桌面更新」，见下一节。
+
 **还要装别的 APK？** 点「推送安装」，屏幕会显示 `http://<电视IP>:18743`，手机连同一个 WiFi 打开它上传就行，不用 U 盘、不用第二台设备。这个页面只能收文件，装不装仍由电视前的人点。
+
+## 桌面更新
+
+内置的桌面是**打包那一刻**的版本，之后上游发新版不用重下整个安装包：点「桌面更新」，它会查出线上最新版 → 下载 → 用同一个「自带安装会话」装上去，净化配置一点不动。
+
+两个桌面的更新源不一样，因为它们的发行方式本来就不一样：
+
+| 桌面 | 更新源 | 说明 |
+|---|---|---|
+| Aerial | 上游 `pengchujin/aerial-tv` 的 latest | 取 `aerial-standard.apk`；GitHub 连不上时回落官网镜像 `aerial.qust.me`（镜像没有版本号，只能「装最新」不能「比版本」） |
+| CleanYourTV | 我们自己的 `mmaotv/AerialToolbox` 里 `cyt-v*` 发行版 | 上游只发源码不发 APK，这些包是我们代构建的；按 tag 前缀筛，不会误拿到工具箱自己的发行版 |
+
+版本号按数字段比较（`3.10 > 3.9`），已是最新版时只说清楚，不会让你白下一次；下载完先验 ZIP 头，拿到错误页不会当成安装包。
 
 ## 支持哪些电视
 

@@ -1,11 +1,9 @@
 package app.ffalcontrol;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
@@ -32,6 +30,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
@@ -96,8 +95,8 @@ public final class MainActivity extends Activity {
 
         LinearLayout.LayoutParams subtitleParams = new LinearLayout.LayoutParams(-1, -2);
         subtitleParams.topMargin = Ui.dp(this, 8);
-        body.addView(Ui.label(this, "ffalcontrol v" + versionName
-                        + " · 净化 + 推送安装 + 厂商策略判定 · 接口仅 127.0.0.1:" + PORT,
+        body.addView(Ui.label(this, "v" + versionName
+                        + " · 不用 root、不用电脑 · 改动前先备份",
                 14, Ui.SECONDARY, false), subtitleParams);
 
         LinearLayout statusCard = new LinearLayout(this);
@@ -114,83 +113,59 @@ public final class MainActivity extends Activity {
         scrollParams.topMargin = Ui.dp(this, 18);
         body.addView(scroll, scrollParams);
 
-        LinearLayout actions = Ui.row(this);
-        LinearLayout.LayoutParams actionsParams = new LinearLayout.LayoutParams(-1, -2);
-        actionsParams.topMargin = Ui.dp(this, 18);
+        // 主操作只留两个：净化、装桌面（通用版换成推送安装）。
+        LinearLayout primaryRow = Ui.row(this);
+        LinearLayout.LayoutParams primaryParams = new LinearLayout.LayoutParams(-1, -2);
+        primaryParams.topMargin = Ui.dp(this, 18);
 
         TextView provisionButton = Ui.pill(this, "一键净化", Ui.PRIMARY);
         provisionButton.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) { runProvision("core"); }
         });
-        actions.addView(provisionButton, Ui.weight(this));
+        primaryRow.addView(provisionButton, Ui.weight(this));
 
-        TextView refresh = Ui.pill(this, "刷新诊断", 0);
-        refresh.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View view) { updateSummary(); }
-        });
-        actions.addView(refresh, Ui.weight(this));
-
-        TextView allowLauncherButton = Ui.pill(this, "放行桌面", 0);
-        allowLauncherButton.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View view) { allowLauncher(BundledLauncher.TARGET); }
-        });
-        actions.addView(allowLauncherButton, Ui.weight(this));
-
-        TextView stop = Ui.pill(this, "停止并退出", Ui.DANGER);
-        stop.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View view) { stopServer(); finish(); }
-        });
-        actions.addView(stop, Ui.weight(this));
-        body.addView(actions, actionsParams);
-
-        LinearLayout launcherRow = Ui.row(this);
-        LinearLayout.LayoutParams launcherParams = new LinearLayout.LayoutParams(-1, -2);
-        launcherParams.topMargin = Ui.dp(this, 12);
-
-        final TextView installHome = Ui.pill(this, "装内置桌面 · " + BundledLauncher.LABEL, Ui.PRIMARY);
-        installHome.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View view) { installBundledLauncher(); }
-        });
-        launcherRow.addView(installHome, Ui.weight(this));
-
-        TextView setDefault = Ui.pill(this, "设为默认桌面", 0);
-        setDefault.setOnClickListener(new View.OnClickListener() {
+        TextView primarySecond = Ui.pill(this,
+                BundledLauncher.BUNDLED ? "装桌面" : "推送安装", Ui.PRIMARY);
+        final boolean bundledVariant = BundledLauncher.BUNDLED;
+        primarySecond.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) {
-                showResult(BundledLauncher.requestHomeRole(MainActivity.this));
+                if (bundledVariant) installBundledLauncher(); else showPushPanel();
             }
         });
-        launcherRow.addView(setDefault, Ui.weight(this));
+        primaryRow.addView(primarySecond, Ui.weight(this));
+        body.addView(primaryRow, primaryParams);
 
-        TextView launcherState = Ui.pill(this, "桌面状态", 0);
-        launcherState.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View view) { showLauncherState(); }
+        // 次操作：一行四个，其余都收进「更多」。
+        LinearLayout secondaryRow = Ui.row(this);
+        LinearLayout.LayoutParams secondaryParams = new LinearLayout.LayoutParams(-1, -2);
+        secondaryParams.topMargin = Ui.dp(this, 10);
+
+        TextView updateHome = Ui.pill(this, "桌面更新", 0);
+        updateHome.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) { startDesktopUpdate(); }
         });
-        launcherRow.addView(launcherState, Ui.weight(this));
-        if (!BundledLauncher.BUNDLED) installHome.setVisibility(View.GONE);
-        body.addView(launcherRow, launcherParams);
+        secondaryRow.addView(updateHome, Ui.weight(this));
 
-        LinearLayout pushRow = Ui.row(this);
-        LinearLayout.LayoutParams pushParams = new LinearLayout.LayoutParams(-1, -2);
-        pushParams.topMargin = Ui.dp(this, 12);
-
-        TextView pushButton = Ui.pill(this, "推送安装", Ui.PRIMARY);
-        pushButton.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View view) { showPushPanel(); }
+        TextView thirdAction = Ui.pill(this, bundledVariant ? "推送安装" : "选包安装", 0);
+        thirdAction.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) {
+                if (bundledVariant) showPushPanel(); else pickApk();
+            }
         });
-        pushRow.addView(pushButton, Ui.weight(this));
+        secondaryRow.addView(thirdAction, Ui.weight(this));
 
-        TextView pickButton = Ui.pill(this, "选包安装", 0);
-        pickButton.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View view) { pickApk(); }
+        TextView guideButton = Ui.pill(this, "使用指南", 0);
+        guideButton.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) { showGuide(); }
         });
-        pushRow.addView(pickButton, Ui.weight(this));
+        secondaryRow.addView(guideButton, Ui.weight(this));
 
-        TextView preauthButton = Ui.pill(this, "预授权放行", 0);
-        preauthButton.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View view) { askPreauthorize(); }
+        TextView moreButton = Ui.pill(this, "更多", 0);
+        moreButton.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) { showMoreMenu(); }
         });
-        pushRow.addView(preauthButton, Ui.weight(this));
-        body.addView(pushRow, pushParams);
+        secondaryRow.addView(moreButton, Ui.weight(this));
+        body.addView(secondaryRow, secondaryParams);
 
         resultView = Ui.label(this, "", 14, Ui.ORANGE, false);
         resultView.setBackground(Ui.cardPlate(this));
@@ -198,26 +173,26 @@ public final class MainActivity extends Activity {
         resultView.setLineSpacing(Ui.dp(this, 3), 1f);
         String tokenValue = BuildToken.value(MainActivity.this);
         android.util.Log.i("FFalControl", "token=" + tokenValue);
-        resultView.setText("就绪。装桌面会自动：放行白名单 → 安装 → 申请默认桌面。");
+        resultView.setText("就绪。第一次用建议先点「使用指南」。");
         LinearLayout.LayoutParams resultParams = new LinearLayout.LayoutParams(-1, -2);
-        resultParams.topMargin = Ui.dp(this, 16);
+        resultParams.topMargin = Ui.dp(this, 14);
         body.addView(resultView, resultParams);
 
-        TextView note = Ui.label(this, "包级禁用走 Guard_disable_App，由 com.tcl.guard 在开机/唤醒时执行；"
-                + "本工具同时写 AppBootPolicy 拦截与 InstallConfig 白名单，每次写入都先备份原值。"
-                + "\nOTA 可能收紧厂商策略，升级固件后请重新跑一次诊断。", 12, Ui.TERTIARY, false);
+        TextView note = Ui.label(this, "改动前都会备份原值；OTA 升级固件后建议重跑一次诊断。",
+                12, Ui.TERTIARY, false);
         note.setLineSpacing(Ui.dp(this, 2), 1f);
         LinearLayout.LayoutParams noteParams = new LinearLayout.LayoutParams(-1, -2);
-        noteParams.topMargin = Ui.dp(this, 14);
+        noteParams.topMargin = Ui.dp(this, 10);
         body.addView(note, noteParams);
 
         setContentView(body);
-        installHome.requestFocus();
+        provisionButton.requestFocus();
         running = true;
         new Thread(new Runnable() {
             @Override public void run() { serve(); }
         }, "TVControl-loopback").start();
         pushServer.start();
+        maybeShowGuideOnFirstRun();
         updateSummary();
     }
 
@@ -236,6 +211,102 @@ public final class MainActivity extends Activity {
             @Override public void run() { if (!isFinishing()) status.setText(text); }
         });
     }
+
+    // ---------------------------------------------------------------- 次级入口
+
+    /** 「更多」：低频但有用的操作都收在这里，主界面只留常用动作。 */
+    private void showMoreMenu() {
+        final ArrayList<String> labels = new ArrayList<String>();
+        final ArrayList<Dialogs.Action> actions = new ArrayList<Dialogs.Action>();
+
+        labels.add("刷新诊断");
+        actions.add(new Dialogs.Action() {
+            @Override public void run() { updateSummary(); }
+        });
+
+        if (BundledLauncher.BUNDLED) {
+            labels.add("设为默认桌面");
+            actions.add(new Dialogs.Action() {
+                @Override public void run() {
+                    showResult(BundledLauncher.requestHomeRole(MainActivity.this));
+                }
+            });
+            labels.add("桌面状态");
+            actions.add(new Dialogs.Action() {
+                @Override public void run() { showLauncherState(); }
+            });
+            labels.add("放行桌面");
+            actions.add(new Dialogs.Action() {
+                @Override public void run() { allowLauncher(BundledLauncher.TARGET); }
+            });
+            labels.add("选包安装");
+            actions.add(new Dialogs.Action() {
+                @Override public void run() { pickApk(); }
+            });
+        }
+
+        labels.add("预授权放行");
+        actions.add(new Dialogs.Action() {
+            @Override public void run() { askPreauthorize(); }
+        });
+
+        labels.add("使用指南");
+        actions.add(new Dialogs.Action() {
+            @Override public void run() { showGuide(); }
+        });
+
+        labels.add("停止并退出");
+        actions.add(new Dialogs.Action() {
+            @Override public void run() { stopServer(); finish(); }
+        });
+
+        Dialogs.on(this)
+                .eyebrow("更多")
+                .title("全部功能")
+                .items(labels.toArray(new String[labels.size()]),
+                        actions.toArray(new Dialogs.Action[actions.size()]))
+                .negative("关闭", null)
+                .show();
+    }
+
+    /** 使用指南：第一次打开自动弹一次，之后从「更多」或主界面进。 */
+    private void showGuide() {
+        Dialogs.on(this)
+                .eyebrow("使用指南")
+                .title("三分钟上手")
+                .body(GUIDE)
+                .positive("开始使用", null)
+                .show();
+    }
+
+    private void maybeShowGuideOnFirstRun() {
+        android.content.SharedPreferences prefs =
+                getSharedPreferences("ffalcontrol", MODE_PRIVATE);
+        if (prefs.getBoolean("guide_seen", false)) return;
+        prefs.edit().putBoolean("guide_seen", true).apply();
+        findViewById(android.R.id.content).postDelayed(new Runnable() {
+            @Override public void run() {
+                if (!isFinishing()) showGuide();
+            }
+        }, 600);
+    }
+
+    private static final String GUIDE =
+            "① 一键净化\n"
+            + "关掉预装广告、推荐位，并把桌面加入安装白名单。改动前会备份原配置，随时可回滚。\n\n"
+            + "② 装桌面\n"
+            + "安装内置桌面并申请默认桌面。装完建议拔插头断电 30 秒，冷启动后配置才真正生效。\n\n"
+            + "③ 装第三方应用\n"
+            + "「推送安装」会给出一个局域网地址，手机浏览器打开即可上传 APK；"
+            + "也可以用「更多 → 选包安装」从 U 盘里挑。厂商拦截会在安装前自动判定并放行。\n\n"
+            + "④ 桌面更新\n"
+            + "已装桌面可单独升级：查线上最新版 → 下载 → 安装，不动净化的配置。\n\n"
+            + "常见问题\n"
+            + "· 装完广告还在？九成是没断电重启，冷启动一次即可。\n"
+            + "· 会不会弄坏电视？不 root、不刷机，所有写入都先备份，卸载即恢复原样。\n"
+            + "· 预装应用能删吗？不能真删，只能禁用（系统分区只读）。\n"
+            + "· 桌面老被抢回？进「更多 → 设为默认桌面」，或重新点一次「装桌面」。\n"
+            + "· 升级了系统？OTA 可能收紧策略，重跑一次「一键净化」与「刷新诊断」。";
 
     private void updateSummary() {
         showStatus("正在读取配置与应用状态……\n启动和刷新只读，不会自动写入。");
@@ -571,6 +642,7 @@ public final class MainActivity extends Activity {
             result.put("install_config_api", true);
             result.put("provision_api", true);
             result.put("launcher_api", true);
+            result.put("desktop_update_api", true);
             result.put("bundled_launcher", BundledLauncher.BUNDLED ? BundledLauncher.TARGET : JSONObject.NULL);
             result.put("push_install_api", true);
             result.put("security_policy_api", true);
@@ -583,6 +655,7 @@ public final class MainActivity extends Activity {
             result.put("bound_address", "127.0.0.1"); result.put("port", PORT);
         }         else if (first[1].equals("/snapshot")) result = snapshot();
         else if (first[1].equals("/launcher")) result = BundledLauncher.state(this);
+        else if (first[1].equals("/launcher/update")) result = DesktopUpdate.check(this);
         else if (first[1].equals("/security/policies")) result = policyGuard.describe();
         else if (first[1].equals("/push/info")) result = pushInfo();
         else if (first[1].equals("/push/jobs")) result = pushJobs(30);
@@ -710,15 +783,20 @@ public final class MainActivity extends Activity {
             String state = job.optString("state", "");
             names[i] = job.optString("file_name", "?") + "  ·  " + stateLabel(state);
         }
-        new AlertDialog.Builder(this)
-                .setTitle("选一个开始安装")
-                .setItems(names, new DialogInterface.OnClickListener() {
-                    @Override public void onClick(DialogInterface dialog, int which) {
-                        JSONObject job = jobs.optJSONObject(which);
-                        if (job != null) confirmAndInstall(job.optString("id"));
-                    }
-                })
-                .setNegativeButton("关闭", null)
+        Dialogs.Action[] actions = new Dialogs.Action[names.length];
+        for (int i = 0; i < names.length; i++) {
+            final JSONObject job = jobs.optJSONObject(i);
+            actions[i] = new Dialogs.Action() {
+                @Override public void run() {
+                    if (job != null) confirmAndInstall(job.optString("id"));
+                }
+            };
+        }
+        Dialogs.on(this)
+                .eyebrow("推送安装")
+                .title("选一个开始安装")
+                .items(names, actions)
+                .negative("关闭", null)
                 .show();
     }
 
@@ -745,20 +823,19 @@ public final class MainActivity extends Activity {
                             if (isFinishing()) return;
                             showResult(describeAnalysis(analysis));
                             JSONArray patches = analysis.optJSONArray("patches");
-                            boolean needsPatch = patches != null && patches.length() > 0;
-                            new AlertDialog.Builder(MainActivity.this)
-                                    .setTitle(needsPatch ? "先改配置再安装？" : "开始安装？")
-                                    .setMessage(needsPatch
-                                            ? analysis.optString("package") + "\n\n将修改 " + patches.length()
-                                                    + " 处厂商配置（已自动备份，可回滚），然后调起系统安装框。"
-                                            : analysis.optString("package") + "\n\n直接调起系统安装框。")
-                                    .setPositiveButton(needsPatch ? "改配置并安装" : "安装",
-                                            new DialogInterface.OnClickListener() {
-                                                @Override public void onClick(DialogInterface dialog, int which) {
-                                                    installJob(id, needsPatch);
-                                                }
-                                            })
-                                    .setNegativeButton("取消", null)
+                            final boolean needsPatch = patches != null && patches.length() > 0;
+                            String body = needsPatch
+                                    ? analysis.optString("package") + "\n\n将修改 " + patches.length()
+                                            + " 处厂商配置（已自动备份，可回滚），然后调起系统安装框。"
+                                    : analysis.optString("package") + "\n\n直接调起系统安装框。";
+                            Dialogs.on(MainActivity.this)
+                                    .eyebrow("安装")
+                                    .title(needsPatch ? "先改配置再安装？" : "开始安装？")
+                                    .body(body)
+                                    .positive(needsPatch ? "改配置并安装" : "安装", new Dialogs.Action() {
+                                        @Override public void run() { installJob(id, needsPatch); }
+                                    })
+                                    .negative("取消", null)
                                     .show();
                         }
                     });
@@ -939,20 +1016,22 @@ public final class MainActivity extends Activity {
         final EditText input = new EditText(this);
         input.setHint("例如 com.example.app");
         input.setSingleLine(true);
+        input.setTextSize(16);
         input.setTextColor(Ui.LABEL);
         input.setHintTextColor(Ui.TERTIARY);
-        input.setPadding(Ui.dp(this, 20), Ui.dp(this, 12), Ui.dp(this, 20), Ui.dp(this, 12));
-        new AlertDialog.Builder(this)
-                .setTitle("预授权放行")
-                .setMessage("输入包名后，会把它加进桌面放行名单、并从拦截名单里移出。\n"
-                        + "注意：这一步只放行，不会安装任何东西。")
-                .setView(input)
-                .setPositiveButton("放行", new DialogInterface.OnClickListener() {
-                    @Override public void onClick(DialogInterface dialog, int which) {
+        input.setBackground(Ui.cardPlate(this));
+        input.setPadding(Ui.dp(this, 20), Ui.dp(this, 14), Ui.dp(this, 20), Ui.dp(this, 14));
+        Dialogs.on(this)
+                .eyebrow("高级")
+                .title("预授权放行")
+                .body("输入包名后，会把它加进桌面放行名单、并从拦截名单里移出。\n这一步只放行，不会安装任何东西。")
+                .view(input)
+                .positive("放行", new Dialogs.Action() {
+                    @Override public void run() {
                         runPreauthorize(input.getText().toString().trim());
                     }
                 })
-                .setNegativeButton("取消", null)
+                .negative("取消", null)
                 .show();
     }
 
@@ -1022,6 +1101,270 @@ public final class MainActivity extends Activity {
                 }
             }
         }, "TVControl-launcher").start();
+    }
+
+    // ---------------------------------------------------------------- 桌面更新
+
+    /**
+     * 「桌面更新」入口。
+     *
+     * 内置变体只知道自己的那个桌面，直接查它；通用版没有内置包，
+     * 就按电视上实际装了的桌面来（两个都装时让用户选一下）。
+     */
+    private void startDesktopUpdate() {
+        showResult("正在查询桌面最新版 …\n联网查 GitHub，通常 2–10 秒。");
+        background(new Runnable() {
+            @Override public void run() {
+                DesktopUpdate.Desktop bundled = DesktopUpdate.bundled();
+                if (bundled != null) {
+                    checkDesktop(bundled);
+                    return;
+                }
+                final ArrayList<DesktopUpdate.Desktop> installed = new ArrayList<DesktopUpdate.Desktop>();
+                for (DesktopUpdate.Desktop desktop : DesktopUpdate.known()) {
+                    if (DesktopUpdate.installedVersion(MainActivity.this, desktop) != null) installed.add(desktop);
+                }
+                if (installed.isEmpty()) {
+                    showResult("没检测到 Aerial 或 CleanYourTV。\n\n"
+                            + "这个变体不内置桌面，先用「推送安装」装一个桌面，之后就能在这里升级。");
+                    return;
+                }
+                if (installed.size() == 1) {
+                    checkDesktop(installed.get(0));
+                    return;
+                }
+                runOnUiThread(new Runnable() {
+                    @Override public void run() {
+                        if (isFinishing()) return;
+                        final String[] names = new String[installed.size()];
+                        Dialogs.Action[] actions = new Dialogs.Action[installed.size()];
+                        for (int i = 0; i < names.length; i++) {
+                            names[i] = installed.get(i).label;
+                            final DesktopUpdate.Desktop desktop = installed.get(i);
+                            actions[i] = new Dialogs.Action() {
+                                @Override public void run() {
+                                    background(new Runnable() {
+                                        @Override public void run() { checkDesktop(desktop); }
+                                    });
+                                }
+                            };
+                        }
+                        Dialogs.on(MainActivity.this)
+                                .eyebrow("桌面更新")
+                                .title("要更新哪个桌面？")
+                                .items(names, actions)
+                                .negative("取消", null)
+                                .show();
+                    }
+                });
+            }
+        });
+    }
+
+    /** 查线上最新版并与本机已装版本对比（后台线程）。 */
+    private void checkDesktop(final DesktopUpdate.Desktop desktop) {
+        final String installed = DesktopUpdate.installedVersion(this, desktop);
+        final DesktopUpdate.Release release;
+        try {
+            release = DesktopUpdate.latest(desktop);
+        } catch (Throwable failure) {
+            showResult("查不到 " + desktop.label + " 的最新版。\n\n" + describe(failure)
+                    + "\n\n内置包还在，随时可以点「装内置桌面」重装一份。");
+            return;
+        }
+        if (!DesktopUpdate.isNewer(release, installed)) {
+            showResult(desktop.label + "\n已装：v" + installed
+                    + "\n线上：v" + release.version
+                    + "\n\n已经是最新版，不用更新。");
+            return;
+        }
+        StringBuilder head = new StringBuilder();
+        head.append(desktop.label).append("\n");
+        head.append("已装：").append(installed == null ? "未安装" : "v" + installed).append("\n");
+        head.append("线上：").append(release.versionKnown()
+                ? "v" + release.version + (release.publishedAt.length() >= 10
+                        ? "（" + release.publishedAt.substring(0, 10) + "）" : "")
+                : "版本号未知 · " + release.source);
+        final String prettyHead = head.toString();
+        showResult(prettyHead + "\n\n点「更新」开始下载安装。");
+
+        runOnUiThread(new Runnable() {
+            @Override public void run() {
+                if (isFinishing()) return;
+                String notes = prettyNotes(release.notes);
+                String message = prettyHead
+                        + (notes.length() == 0 ? "" : "\n\n更新说明：\n" + notes)
+                        + "\n\n装完自动保持原来的默认桌面设置。";
+                Dialogs.on(MainActivity.this)
+                        .eyebrow("桌面更新")
+                        .title("更新到 " + (release.versionKnown() ? "v" + release.version : "最新版") + "？")
+                        .body(message)
+                        .positive("下载并安装", new Dialogs.Action() {
+                            @Override public void run() {
+                                runDesktopUpdate(desktop, release, installed);
+                            }
+                        })
+                        .negative("取消", null)
+                        .show();
+            }
+        });
+    }
+
+    /** 白名单 → 下载 → 用本应用自己的安装会话装进去（后台线程）。 */
+    private void runDesktopUpdate(final DesktopUpdate.Desktop desktop,
+                                  final DesktopUpdate.Release release,
+                                  final String installedBefore) {
+        background(new Runnable() {
+            @Override public void run() {
+                final StringBuilder log = new StringBuilder();
+                log.append(desktop.label).append(" 更新\n");
+
+                // 先确认「安装未知应用」权限，省得下完几个 MB 才被系统挡回来
+                if (Build.VERSION.SDK_INT >= 26 && !getPackageManager().canRequestPackageInstalls()) {
+                    runOnUiThread(new Runnable() {
+                        @Override public void run() {
+                            if (isFinishing()) return;
+                            Dialogs.on(MainActivity.this)
+                                    .eyebrow("系统权限")
+                                    .title("还差一步：允许安装应用")
+                                    .body("这个固件要求先允许本应用安装应用，安装会话才能提交。\n\n"
+                                            + "点「去设置」打开开关，回来再点一次「桌面更新」。")
+                                    .positive("去设置", new Dialogs.Action() {
+                                        @Override public void run() { openInstallPermissionSettings(); }
+                                    })
+                                    .negative("稍后", null)
+                                    .show();
+                        }
+                    });
+                    return;
+                }
+
+                showResult(log + "\n第 1/3 步：把 " + desktop.pkg + " 加入安装白名单 …");
+                try {
+                    String raw = featureRaw("InstallConfig");
+                    if (raw == null) {
+                        log.append("白名单跳过：本机没有 InstallConfig 行。\n");
+                    } else {
+                        JSONObject applied = installConfigControl.apply(new JSONObject()
+                                .put("action", "allow_launcher_package")
+                                .put("package", desktop.pkg)
+                                .put("expected_sha256", sha256Hex(raw))
+                                .put("write", true).toString());
+                        log.append("白名单：").append(applied.optString("status", "已写入")).append("\n");
+                    }
+                } catch (Throwable failure) {
+                    log.append("白名单跳过（继续安装）：").append(describe(failure)).append("\n");
+                }
+
+                final File apk = DesktopUpdate.cacheFile(MainActivity.this, desktop,
+                        release.versionKnown() ? release.version : "");
+                if (apk.exists() && apk.length() > 64 * 1024) {
+                    log.append("复用已下载的 ").append(apk.getName()).append("\n");
+                } else {
+                    showResult(log + "\n第 2/3 步：下载 " + release.source + " …");
+                    try {
+                        DesktopUpdate.download(release.url, apk, new DesktopUpdate.Progress() {
+                            private long lastShown = -1;
+
+                            @Override public void onProgress(long read, long total) {
+                                // 每 1 MB 才刷一次界面，免得刷屏且拖慢下载
+                                if (lastShown >= 0 && read - lastShown < 1048576L) return;
+                                lastShown = read;
+                                String size = total > 0
+                                        ? String.format(Locale.US, "%.1f / %.1f MB",
+                                                read / 1048576.0, total / 1048576.0)
+                                        : String.format(Locale.US, "%.1f MB", read / 1048576.0);
+                                showResult(log + "\n第 2/3 步：下载中 " + size + " …");
+                            }
+                        });
+                        log.append("下载完成：").append(apk.getName())
+                                .append("（").append(apk.length() / 1024).append(" KB）\n");
+                    } catch (Throwable failure) {
+                        showResult(log + "\n下载失败：" + describe(failure)
+                                + "\n\n可以先用「装内置桌面」重装，或换个网络再试。");
+                        return;
+                    }
+                }
+
+                showResult(log + "\n第 3/3 步：安装中，电视上可能弹一次确认框 …");
+                final boolean[] ok = new boolean[]{false};
+                try {
+                    ApkInstaller.install(MainActivity.this, apk, desktop.pkg, new ApkInstaller.Listener() {
+                        @Override public void onProgress(String text) {
+                            showResult(log + "\n安装：" + text);
+                        }
+
+                        @Override public void onDone(boolean success, String text, int status) {
+                            ok[0] = success;
+                            if (!success) showResult(log + "\n安装失败：" + text);
+                        }
+                    });
+                } catch (Throwable failure) {
+                    showResult(log + "\n安装失败：" + describe(failure));
+                    return;
+                }
+                if (!ok[0]) return;
+
+                final String now = DesktopUpdate.installedVersion(MainActivity.this, desktop);
+                runOnUiThread(new Runnable() {
+                    @Override public void run() {
+                        if (isFinishing()) return;
+                        StringBuilder done = new StringBuilder(log);
+                        done.append("更新完成，当前版本：").append(now == null ? "读不到版本号" : "v" + now);
+                        if (installedBefore == null && desktop.pkg.equals(BundledLauncher.TARGET)) {
+                            // 第一次装（原来没有这个桌面）：顺手接管主页
+                            done.append("\n\n首次安装，正在申请默认桌面：")
+                                    .append(BundledLauncher.requestHomeRole(MainActivity.this));
+                        } else if (desktop.pkg.equals(BundledLauncher.TARGET)) {
+                            done.append("\n\n默认桌面不变；如果是刚换桌面，点「设为默认桌面」。");
+                        }
+                        showResult(done.toString());
+                    }
+                });
+            }
+        });
+    }
+
+    /** Release 正文是 markdown，电视上没条件渲染，压成纯文本再给用户看。 */
+    private static String prettyNotes(String notes) {
+        if (notes == null) return "";
+        String text = notes.replace("\r", "");
+        text = text.replaceAll("!\\[[^\\]]*\\]\\([^)]*\\)", "");
+        text = text.replaceAll("\\[([^\\]]*)\\]\\([^)]*\\)", "$1");
+        text = text.replaceAll("(?m)^#{1,6}\\s*", "");
+        text = text.replaceAll("[*`_>]{1,3}", "");
+        text = text.replaceAll("\\n{3,}", "\n\n");
+        text = text.trim();
+        if (text.length() > 700) text = text.substring(0, 700) + "…";
+        return text;
+    }
+
+    private void background(final Runnable task) {
+        new Thread(task, "TVControl-desktop-update").start();
+    }
+
+    /** Android 8+ 的「安装未知应用」授权页；打不开就退回安全设置。 */
+    private void openInstallPermissionSettings() {
+        if (Build.VERSION.SDK_INT >= 26) {
+            try {
+                Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                        Uri.parse("package:" + getPackageName()));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                return;
+            } catch (Throwable ignored) {
+                // 继续走兜底
+            }
+        }
+        try {
+            Intent intent = new Intent(android.provider.Settings.ACTION_SECURITY_SETTINGS);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            showResult("已打开系统设置，请找到「安装未知应用 / 特殊权限」并允许本应用。");
+        } catch (Throwable failure) {
+            showResult("打不开系统设置：" + describe(failure)
+                    + "\n请手动进「设置 → 应用 → 特殊权限 → 安装未知应用」允许本工具。");
+        }
     }
 
     private void showLauncherState() {

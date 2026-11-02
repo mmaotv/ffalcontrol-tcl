@@ -26,6 +26,12 @@ export ANDROID_HOME=/path/to/android-sdk   # 需要 platforms/android-34 + build
 
 把 APK 放进 `vendor/`，在 `build.sh` 的 `case` 里加一行（包名 + 显示名 + 路径），重编即可。构建会生成 `LauncherSpec.java`，界面上的「装内置桌面 · XXX」按钮文案和包名都从这里来。
 
+## 图标与资源
+
+图标是 `res/mipmap-*/ic_launcher.png`（48 / 72 / 96 / 144 / 192），由 `tools/shot/make_icon.py` 生成（Pillow 4× 超采样）。`build.sh` 里多了一步 `aapt2 compile --dir res -o build/res`，链接时把 `build/res/*.flat` 一起带上；换图标只改 `res/` 里的 PNG 即可，不用动清单。
+
+改版本号：`AndroidManifest.xml` 的 `versionCode` / `versionName`，以及 `build.sh` 里产物名 `OUT`。
+
 ## 自测
 
 判定逻辑和 AXML 解析器都不依赖 Android，可以直接在 JVM 上验：
