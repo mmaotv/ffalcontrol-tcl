@@ -56,7 +56,7 @@ fi
 TOKEN="${TOKEN:-0e8344e8b70b4f95e48e887c912a8f35ad1e4a37b92f290b031f8dca7b6224c7}"
 if [ "$TOKEN" = "random" ]; then TOKEN=""; fi
 
-OUT="ffalcontrol-0.4.0-${TAG}.apk"
+OUT="ffalcontrol-0.4.1-${TAG}.apk"
 
 rm -rf build
 mkdir -p build/classes build/dex build/gen/app/ffalcontrol build/assets build/res dist

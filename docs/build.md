@@ -24,7 +24,7 @@ export ANDROID_HOME=/path/to/android-sdk   # 需要 platforms/android-34 + build
 
 ## 换一套内置桌面
 
-把 APK 放进 `vendor/`，在 `build.sh` 的 `case` 里加一行（包名 + 显示名 + 路径），重编即可。构建会生成 `LauncherSpec.java`，界面上的「装内置桌面 · XXX」按钮文案和包名都从这里来。
+把 APK 放进 `vendor/`，在 `build.sh` 的 `case` 里加一行（包名 + 显示名 + 路径），重编即可。构建会生成 `LauncherSpec.java`，主界面「装桌面」按钮的文案和包名都从这里来。
 
 ## 图标与资源
 

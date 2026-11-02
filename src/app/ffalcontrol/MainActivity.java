@@ -68,6 +68,7 @@ public final class MainActivity extends Activity {
     private volatile String watchingJob;
 
     private static final int REQUEST_PICK_APK = 4201;
+    private static final int REQUEST_MORE = 4202;
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -214,59 +215,29 @@ public final class MainActivity extends Activity {
 
     // ---------------------------------------------------------------- 次级入口
 
-    /** 「更多」：低频但有用的操作都收在这里，主界面只留常用动作。 */
+    /**
+     * 「更多」：进独立的「全部功能」页。页面只负责展示与转发，
+     * 真正执行还在本类，靠 {@link #onActivityResult} 把动作接回来。
+     */
     private void showMoreMenu() {
-        final ArrayList<String> labels = new ArrayList<String>();
-        final ArrayList<Dialogs.Action> actions = new ArrayList<Dialogs.Action>();
+        startActivityForResult(new Intent(this, MoreActivity.class), REQUEST_MORE);
+    }
 
-        labels.add("刷新诊断");
-        actions.add(new Dialogs.Action() {
-            @Override public void run() { updateSummary(); }
-        });
-
-        if (BundledLauncher.BUNDLED) {
-            labels.add("设为默认桌面");
-            actions.add(new Dialogs.Action() {
-                @Override public void run() {
-                    showResult(BundledLauncher.requestHomeRole(MainActivity.this));
-                }
-            });
-            labels.add("桌面状态");
-            actions.add(new Dialogs.Action() {
-                @Override public void run() { showLauncherState(); }
-            });
-            labels.add("放行桌面");
-            actions.add(new Dialogs.Action() {
-                @Override public void run() { allowLauncher(BundledLauncher.TARGET); }
-            });
-            labels.add("选包安装");
-            actions.add(new Dialogs.Action() {
-                @Override public void run() { pickApk(); }
-            });
-        }
-
-        labels.add("预授权放行");
-        actions.add(new Dialogs.Action() {
-            @Override public void run() { askPreauthorize(); }
-        });
-
-        labels.add("使用指南");
-        actions.add(new Dialogs.Action() {
-            @Override public void run() { showGuide(); }
-        });
-
-        labels.add("停止并退出");
-        actions.add(new Dialogs.Action() {
-            @Override public void run() { stopServer(); finish(); }
-        });
-
-        Dialogs.on(this)
-                .eyebrow("更多")
-                .title("全部功能")
-                .items(labels.toArray(new String[labels.size()]),
-                        actions.toArray(new Dialogs.Action[actions.size()]))
-                .negative("关闭", null)
-                .show();
+    /** 「全部功能」页点完一项后回到这里执行，业务逻辑一行都没搬过去。 */
+    private void runMoreAction(String action) {
+        if (action == null) { updateSummary(); return; }
+        if (action.equals(MoreActivity.ACT_INSTALL_DESKTOP)) installBundledLauncher();
+        else if (action.equals(MoreActivity.ACT_DESKTOP_UPDATE)) startDesktopUpdate();
+        else if (action.equals(MoreActivity.ACT_SET_HOME))
+            showResult(BundledLauncher.requestHomeRole(this));
+        else if (action.equals(MoreActivity.ACT_ALLOW_LAUNCHER)) allowLauncher(BundledLauncher.TARGET);
+        else if (action.equals(MoreActivity.ACT_LAUNCHER_STATE)) showLauncherState();
+        else if (action.equals(MoreActivity.ACT_PUSH)) showPushPanel();
+        else if (action.equals(MoreActivity.ACT_PICK_APK)) pickApk();
+        else if (action.equals(MoreActivity.ACT_PROVISION)) runProvision("core");
+        else if (action.equals(MoreActivity.ACT_PREAUTHORIZE)) askPreauthorize();
+        else if (action.equals(MoreActivity.ACT_REFRESH)) updateSummary();
+        else if (action.equals(MoreActivity.ACT_EXIT)) { stopServer(); finish(); }
     }
 
     /** 使用指南：第一次打开自动弹一次，之后从「更多」或主界面进。 */
@@ -291,21 +262,22 @@ public final class MainActivity extends Activity {
         }, 600);
     }
 
-    private static final String GUIDE =
+    /** 使用指南正文。「全部功能」页也会读它，所以是包内可见。 */
+    static final String GUIDE =
             "① 一键净化\n"
             + "关掉预装广告、推荐位，并把桌面加入安装白名单。改动前会备份原配置，随时可回滚。\n\n"
             + "② 装桌面\n"
             + "安装内置桌面并申请默认桌面。装完建议拔插头断电 30 秒，冷启动后配置才真正生效。\n\n"
             + "③ 装第三方应用\n"
             + "「推送安装」会给出一个局域网地址，手机浏览器打开即可上传 APK；"
-            + "也可以用「更多 → 选包安装」从 U 盘里挑。厂商拦截会在安装前自动判定并放行。\n\n"
+            + "也可以用「全部功能 → 选包安装」从 U 盘里挑。厂商拦截会在安装前自动判定并放行。\n\n"
             + "④ 桌面更新\n"
             + "已装桌面可单独升级：查线上最新版 → 下载 → 安装，不动净化的配置。\n\n"
             + "常见问题\n"
             + "· 装完广告还在？九成是没断电重启，冷启动一次即可。\n"
             + "· 会不会弄坏电视？不 root、不刷机，所有写入都先备份，卸载即恢复原样。\n"
             + "· 预装应用能删吗？不能真删，只能禁用（系统分区只读）。\n"
-            + "· 桌面老被抢回？进「更多 → 设为默认桌面」，或重新点一次「装桌面」。\n"
+            + "· 桌面老被抢回？进「全部功能 → 设为默认桌面」，或重新点一次「装桌面」。\n"
             + "· 升级了系统？OTA 可能收紧策略，重跑一次「一键净化」与「刷新诊断」。";
 
     private void updateSummary() {
@@ -967,6 +939,12 @@ public final class MainActivity extends Activity {
 
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_MORE) {
+            String action = resultCode == RESULT_OK && data != null
+                    ? data.getStringExtra(MoreActivity.EXTRA_ACTION) : null;
+            runMoreAction(action);
+            return;
+        }
         if (requestCode != REQUEST_PICK_APK || resultCode != RESULT_OK || data == null) return;
         final Uri uri = data.getData();
         if (uri == null) return;

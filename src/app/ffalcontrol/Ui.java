@@ -30,6 +30,8 @@ final class Ui {
     static final int GREEN       = Color.parseColor("#30D158");
     static final int ORANGE      = Color.parseColor("#FF9F0A");
     static final int RED         = Color.parseColor("#FF453A");
+    static final int BLUE        = Color.parseColor("#0A84FF");
+    static final int GREY        = Color.parseColor("#8E8E93");
     static final int FOCUS       = Color.parseColor("#F5F5F7");
     static final int ON_FOCUS    = Color.parseColor("#1D1D1F");
 
@@ -109,6 +111,11 @@ final class Ui {
     /** 弹窗底板：比卡片更大的圆角，暗色毛玻璃，和主界面同一套材质。 */
     static GradientDrawable panel(Context context) {
         return plate(PANEL, HAIRLINE, dp(context, 28));
+    }
+
+    /** 通用圆角底板：「全部功能」页的行、色条、状态胶囊都用它，避免各处自己拼 GradientDrawable。 */
+    static GradientDrawable rounded(Context context, int fill, int strokeColor, int radiusDp) {
+        return plate(fill, strokeColor, dp(context, radiusDp));
     }
 
     /**
