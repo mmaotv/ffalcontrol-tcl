@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>TCL 净化 · 给电视换一个干净的桌面，并且装得进任何软件</title>
-<meta name="description" content="TCL / 雷鸟电视一键去广告、装第三方桌面、绕过厂商安装限制。一个 APK，不需要电脑、不需要 ADB、不需要 root，断网也能用。">
+<title>TCL 电视净化 · 换个干净的桌面，顺便把想装的软件装上</title>
+<meta name="description" content="TCL / 雷鸟电视：一个 APK 去掉预装广告、换第三方桌面、装上被厂商拦下的软件。不用电脑、不用 ADB、不用 root。">
 <style>
 :root{
   --bg:#000;
@@ -31,7 +31,7 @@ body{
 a{color:inherit;text-decoration:none}
 
 /* ---------- hero ---------- */
-.hero{position:relative;padding:96px 0 76px;text-align:center;overflow:hidden}
+.hero{position:relative;padding:92px 0 70px;text-align:center;overflow:hidden}
 .hero::before{
   content:"";position:absolute;inset:-20% -10% auto -10%;height:620px;
   background:radial-gradient(60% 55% at 50% 0%,rgba(48,209,88,.13),transparent 70%),
@@ -47,16 +47,13 @@ a{color:inherit;text-decoration:none}
 }
 .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(48,209,88,.16)}
 h1{
-  margin:26px auto 20px;max-width:800px;
-  font-size:clamp(38px,6.2vw,64px);line-height:1.08;
-  font-weight:600;letter-spacing:-.032em;
+  margin:26px auto 20px;max-width:820px;
+  font-size:clamp(34px,5.6vw,58px);line-height:1.12;
+  font-weight:600;letter-spacing:-.03em;
 }
 h1 em{font-style:normal;color:var(--green)}
-.lede{
-  max-width:620px;margin:0 auto;
-  font-size:clamp(16px,2vw,19px);color:var(--fg2);line-height:1.7;
-}
-.cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:38px}
+.lede{max-width:600px;margin:0 auto;font-size:clamp(16px,2vw,18.5px);color:var(--fg2);line-height:1.72}
+.cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:36px}
 .btn{
   display:inline-flex;align-items:center;gap:9px;
   padding:15px 30px;border-radius:999px;
@@ -69,63 +66,34 @@ h1 em{font-style:normal;color:var(--green)}
 .btn-primary:hover{background:#fff}
 .btn-ghost{background:rgba(120,120,128,.18);color:var(--fg);border-color:var(--line-strong)}
 .btn-ghost:hover{background:rgba(120,120,128,.28)}
-.meta{margin-top:26px;font-size:13px;color:var(--fg3)}
+.meta{margin-top:24px;font-size:13px;color:var(--fg3)}
 .meta span+span::before{content:"·";margin:0 10px;opacity:.5}
 
 /* ---------- section ---------- */
-section{padding:76px 0}
-.eyebrow{
-  font-size:13px;font-weight:500;letter-spacing:.10em;text-transform:uppercase;
-  color:var(--green);margin-bottom:16px;
-}
-h2{
-  font-size:clamp(26px,3.6vw,38px);line-height:1.22;
-  font-weight:600;letter-spacing:-.026em;margin-bottom:18px;max-width:760px;
-}
-.sub{color:var(--fg2);max-width:640px;font-size:16.5px;line-height:1.72}
+section{padding:70px 0}
+.eyebrow{font-size:13px;font-weight:500;letter-spacing:.10em;text-transform:uppercase;color:var(--green);margin-bottom:14px}
+h2{font-size:clamp(25px,3.4vw,36px);line-height:1.24;font-weight:600;letter-spacing:-.026em;margin-bottom:16px;max-width:760px}
+.sub{color:var(--fg2);max-width:620px;font-size:16.5px;line-height:1.72}
 
-/* ---------- grid cards ---------- */
-.grid{display:grid;gap:16px;margin-top:38px}
-.g3{grid-template-columns:repeat(3,1fr)}
-.g2{grid-template-columns:repeat(2,1fr)}
-.card{
-  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));
-  border:1px solid var(--line);border-radius:20px;padding:28px 26px;
-  transition:border-color .2s,transform .2s;
+/* ---------- steps ---------- */
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:34px}
+.step{border:1px solid var(--line);border-radius:20px;padding:26px;background:rgba(255,255,255,.02)}
+.step .n{
+  width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:rgba(48,209,88,.14);border:1px solid rgba(48,209,88,.3);color:var(--green);
+  font-size:14px;font-weight:600;margin-bottom:15px;
 }
-.card:hover{border-color:var(--line-strong);transform:translateY(-2px)}
-.card h3{font-size:17px;font-weight:500;margin-bottom:9px;letter-spacing:-.01em}
-.card p{font-size:14.5px;color:var(--fg2);line-height:1.68}
-.num{
-  display:inline-flex;align-items:center;justify-content:center;
-  width:30px;height:30px;border-radius:9px;margin-bottom:16px;
-  background:rgba(48,209,88,.14);color:var(--green);
-  font-size:14px;font-weight:600;
-}
-.card.warn .num{background:rgba(255,159,10,.14);color:var(--orange)}
+.step h4{font-size:16.5px;font-weight:500;margin-bottom:8px}
+.step p{font-size:14.5px;color:var(--fg2);line-height:1.68}
 
-/* ---------- strategy table ---------- */
-.tbl{margin-top:34px;border:1px solid var(--line);border-radius:18px;overflow:hidden}
-.row{
-  display:grid;grid-template-columns:220px 1fr 168px;
-  gap:18px;padding:18px 24px;align-items:start;
-  border-bottom:1px solid var(--line);
-}
-.row:last-child{border-bottom:0}
-.row.head{background:rgba(255,255,255,.035);font-size:12.5px;letter-spacing:.06em;
-  text-transform:uppercase;color:var(--fg3);padding:13px 24px}
-.mono{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,monospace;font-size:13.5px;color:var(--fg)}
-.row p{font-size:14px;color:var(--fg2);line-height:1.6}
-.tag{
-  display:inline-block;padding:4px 11px;border-radius:999px;
-  font-size:12px;font-weight:500;white-space:nowrap;
-}
-.tag.hit{background:rgba(255,69,58,.13);color:#ff7b70}
-.tag.pass{background:rgba(48,209,88,.13);color:#4fd873}
-.tag.cond{background:rgba(255,159,10,.13);color:#ffb340}
+/* ---------- screenshots ---------- */
+.shots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:26px}
+.shot{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#000}
+.shot img{display:block;width:100%;height:auto}
+.shot .cap{padding:14px 18px 16px;border-top:1px solid var(--line);font-size:13.5px;color:var(--fg2);line-height:1.6}
 
 /* ---------- download ---------- */
-.dl{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:38px}
+.dl{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:34px}
 .pkg{
   display:flex;flex-direction:column;
   background:var(--glass);border:1px solid var(--line);border-radius:18px;
@@ -136,87 +104,62 @@ h2{
 .pkg .name{font-size:19px;font-weight:600;letter-spacing:-.02em;margin-bottom:6px}
 .pkg .size{font-size:13px;color:var(--fg2);font-family:ui-monospace,Menlo,monospace}
 .pkg .desc{font-size:13.5px;color:var(--fg2);margin-top:14px;line-height:1.6;flex:1}
-.pkg .go{
-  margin-top:18px;font-size:14px;font-weight:500;color:var(--green);
-  display:inline-flex;align-items:center;gap:6px;
-}
+.pkg .go{margin-top:18px;font-size:14px;font-weight:500;color:var(--green);display:inline-flex;align-items:center;gap:6px}
 .pkg .go::after{content:"→";transition:transform .2s}
 .pkg:hover .go::after{transform:translateX(4px)}
 .pkg.rec{border-color:rgba(48,209,88,.35)}
 .pkg.rec .kicker{color:var(--green)}
 
 /* ---------- compat ---------- */
-.compat{margin-top:34px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.box{border:1px solid var(--line);border-radius:18px;padding:26px}
-.box h4{font-size:15px;font-weight:500;margin-bottom:14px;display:flex;align-items:center;gap:9px}
-.box h4::before{content:"";width:8px;height:8px;border-radius:50%}
+.compat{margin-top:30px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.box{border:1px solid var(--line);border-radius:18px;padding:24px 22px}
+.box h4{font-size:15px;font-weight:500;margin-bottom:13px;display:flex;align-items:center;gap:9px}
+.box h4::before{content:"";width:8px;height:8px;border-radius:50%;flex:none}
 .box.yes h4::before{background:var(--green)}
 .box.maybe h4::before{background:var(--orange)}
 .box.no h4::before{background:var(--red)}
-.box ul{list-style:none;display:flex;flex-direction:column;gap:9px}
-.box li{font-size:14px;color:var(--fg2);padding-left:15px;position:relative;line-height:1.6}
+.box ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+.box li{font-size:14px;color:var(--fg2);padding-left:14px;position:relative;line-height:1.62}
 .box li::before{content:"";position:absolute;left:0;top:9px;width:5px;height:5px;border-radius:50%;background:var(--fg3)}
-.kbd{
-  font-family:ui-monospace,Menlo,monospace;font-size:12.5px;
-  background:rgba(255,255,255,.08);padding:2px 7px;border-radius:5px;
-  color:var(--fg);border:1px solid var(--line);
-}
+.kbd{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:rgba(255,255,255,.08);padding:2px 7px;border-radius:5px;color:var(--fg);border:1px solid var(--line)}
 
-/* ---------- steps ---------- */
-.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:40px;position:relative}
-.step{position:relative;padding-right:26px}
-.step::after{
-  content:"";position:absolute;top:15px;right:8px;width:calc(100% - 40px);
-  height:1px;background:var(--line);display:none;
+/* ---------- faq ---------- */
+details{
+  border:1px solid var(--line);border-radius:16px;padding:18px 22px;margin-top:12px;
+  background:rgba(255,255,255,.022);transition:border-color .2s;
 }
-.step .n{
-  width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  background:rgba(255,255,255,.07);border:1px solid var(--line-strong);
-  font-size:13px;font-weight:600;margin-bottom:15px;
-}
-.step h4{font-size:15px;font-weight:500;margin-bottom:7px}
-.step p{font-size:13.5px;color:var(--fg2);line-height:1.6}
-
-/* ---------- screenshots ---------- */
-.shots{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:38px}
-.shot{
-  border:1px solid var(--line);border-radius:18px;overflow:hidden;
-  background:#000;transition:border-color .2s,transform .2s;
-}
-.shot:hover{border-color:var(--line-strong);transform:translateY(-2px)}
-.shot img{display:block;width:100%;height:auto}
-.shot .cap{padding:17px 21px 19px;border-top:1px solid var(--line);background:var(--glass)}
-.shot .cap b{display:block;font-size:14.5px;font-weight:500;letter-spacing:-.01em;margin-bottom:5px}
-.shot .cap span{font-size:13px;color:var(--fg2);line-height:1.62}
-.foot-note{margin-top:20px;font-size:12.5px;color:var(--fg3);line-height:1.7}
+details:hover{border-color:var(--line-strong)}
+details summary{cursor:pointer;font-size:15.5px;font-weight:500;list-style:none;letter-spacing:-.01em}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:"+";float:right;color:var(--fg3);font-weight:400}
+details[open] summary::after{content:"–"}
+details .a{margin-top:13px;font-size:14.5px;color:var(--fg2);line-height:1.72}
+details .a p+p{margin-top:9px}
 
 /* ---------- notice ---------- */
 .notice{
-  margin-top:34px;padding:26px 28px;border-radius:18px;
-  background:rgba(255,159,10,.07);border:1px solid rgba(255,159,10,.26);
+  margin-top:30px;border:1px solid rgba(255,159,10,.28);background:rgba(255,159,10,.055);
+  border-radius:18px;padding:24px 26px;
 }
-.notice h4{font-size:15px;font-weight:500;color:#ffb340;margin-bottom:11px}
-.notice p{font-size:14px;color:var(--fg2);line-height:1.72}
-.notice p+p{margin-top:10px}
+.notice h4{font-size:15px;font-weight:500;color:var(--orange);margin-bottom:11px}
+.notice p{font-size:14.5px;color:var(--fg2);line-height:1.7}
+.notice p+p{margin-top:9px}
 
 /* ---------- footer ---------- */
-footer{border-top:1px solid var(--line);padding:44px 0 60px;margin-top:30px}
+footer{border-top:1px solid var(--line);padding:42px 0 56px;margin-top:26px}
 .foot{display:flex;justify-content:space-between;gap:26px;flex-wrap:wrap;align-items:flex-start}
 .foot p{font-size:13.5px;color:var(--fg3);line-height:1.75;max-width:560px}
 .foot a{color:var(--fg2);border-bottom:1px solid var(--line-strong)}
 .foot a:hover{color:var(--fg)}
 
 @media(max-width:860px){
-  .g3,.dl,.steps,.compat{grid-template-columns:1fr 1fr}
+  .dl,.compat,.steps{grid-template-columns:1fr 1fr}
   .shots{grid-template-columns:1fr}
-  .row{grid-template-columns:1fr;gap:8px}
-  .row.head{display:none}
-  .step{padding-right:0;margin-bottom:24px}
 }
 @media(max-width:600px){
-  .g3,.g2,.dl,.steps,.compat{grid-template-columns:1fr}
-  .hero{padding:64px 0 48px}
-  section{padding:56px 0}
+  .dl,.compat,.steps{grid-template-columns:1fr}
+  .hero{padding:64px 0 46px}
+  section{padding:52px 0}
 }
 </style>
 </head>
@@ -224,290 +167,207 @@ footer{border-top:1px solid var(--line);padding:44px 0 60px;margin-top:30px}
 
 <div class="hero">
   <div class="wrap">
-    <div class="badge"><span class="dot"></span>v0.3.0 · 免电脑 · 免 ADB · 免 root</div>
-    <h1>给电视换一个<em>干净</em>的桌面，<br>并且装得进任何软件</h1>
+    <div class="badge"><span class="dot"></span>一个 APK 搞定 · 不用电脑 · 不用 ADB · 不用 root</div>
+    <h1>给 TCL 电视换个<em>干净的桌面</em>，<br>顺手把想装的软件装上</h1>
     <p class="lede">
-      TCL 和雷鸟电视会把第三方桌面、以及从 U 盘装的软件拦下来。
-      这个工具用一个 APK 解决：一键关掉预装广告和推荐位，把喜欢的桌面装好设为首页，再帮你装进那些被拦下来的包。
+      TCL 和雷鸟电视会拦掉第三方桌面，也会拦掉你从 U 盘装的软件。
+      这个工具把这些限制绕开 —— 顺便把开机就跳出来的广告和推荐位一起关掉。
     </p>
     <div class="cta">
-      <a class="btn btn-primary" href="#download">下载最新版</a>
-      <a class="btn btn-ghost" href="#how">先看它怎么做到的</a>
+      <a class="btn btn-primary" href="#download">下载（四个包选一个）</a>
+      <a class="btn btn-ghost" href="#start">先看怎么装</a>
     </div>
     <p class="meta">
-      <span>四个变体，只装一个</span>
       <span>90 KB – 14 MB</span>
-      <span>断网可用</span>
+      <span>装完断网也能用</span>
+      <span>桌面已打包在里面</span>
     </p>
   </div>
 </div>
 
-<section id="shots">
+<section id="check">
   <div class="wrap">
-    <div class="eyebrow">界面</div>
-    <h2>一屏看完，没有二级菜单</h2>
+    <div class="eyebrow">先确认</div>
+    <h2>你的电视是不是这个型号？</h2>
     <p class="sub">
-      整个工具就是一块面板：上面是只读诊断，下面是三排按钮。遥控器上下左右就能走完，
-      不用注册、不用登录、不联网也能用。
+      这工具只对 <strong style="color:var(--fg)">MT9655 / MT9653 平台的 TCL、雷鸟新电视</strong>有效。
+      别的品牌、老机型都装不了，或者装了没反应 —— 先对一下再下载。
     </p>
-    <div class="shots">
-      <div class="shot">
-        <img src="shots/main-aerial.png" alt="内置 Aerial 版主界面：诊断卡片与三排操作按钮" loading="lazy">
-        <div class="cap">
-          <b>内置版主界面</b>
-          <span>右上角标出内置了哪套桌面，第二排多一个「装内置桌面」，点一下就按 放行白名单 → 安装 → 申请默认桌面 三步走完。</span>
-        </div>
+    <div class="compat">
+      <div class="box yes">
+        <h4>基本都能用</h4>
+        <ul>
+          <li>实测机型：TCL Smart TV Pro（MT9655 平台，Android 14）</li>
+          <li>近两年 MT9655 / MT9653 平台的 TCL 机型</li>
+          <li>雷鸟 FFALCON 同代机型（鹤7 75R79A 已验证）</li>
+        </ul>
       </div>
-      <div class="shot">
-        <img src="shots/push-analysis.png" alt="推送安装后的策略判定结果：桌面类、命中 launcherStrategy、给出放行建议" loading="lazy">
-        <div class="cap">
-          <b>先判定，再动手</b>
-          <span>解析出包名、版本、是否声明桌面、谁签的名，算出会被哪条策略拦，并把要改的那一项直接写清楚 —— 改之前你就能看见。</span>
-        </div>
+      <div class="box maybe">
+        <h4>不确定？自己查两条</h4>
+        <ul>
+          <li><span class="kbd">getprop ro.board.platform</span> 显示 MT9655 或 MT9653</li>
+          <li><span class="kbd">pm path com.tcl.guard</span> 有输出</li>
+          <li>两条都满足才装（怎么查见下面）</li>
+        </ul>
       </div>
-      <div class="shot">
-        <img src="shots/push-judge.png" alt="判定后的确认框：将修改 1 处厂商配置，已自动备份可回滚" loading="lazy">
-        <div class="cap">
-          <b>每一步都要你点头</b>
-          <span>改配置前明确告诉你动了几处、已备份、可回滚；改完才调系统安装框，装不装最后还是你决定。</span>
-        </div>
-      </div>
-      <div class="shot">
-        <img src="shots/main-universal.png" alt="通用版主界面：只做策略绕过，不内置任何桌面" loading="lazy">
-        <div class="cap">
-          <b>通用版主界面</b>
-          <span>不绑定任何桌面，只负责净化、放行和推送安装。已经装好桌面的人装这个就够。</span>
-        </div>
+      <div class="box no">
+        <h4>别装，会白费劲</h4>
+        <ul>
+          <li>小米、海信、华为、索尼等其它品牌</li>
+          <li>海外版 Google TV 系统的 TCL</li>
+          <li>MT96 之前的老 TCL（Amlogic / 海思芯片）</li>
+        </ul>
       </div>
     </div>
-    <p class="foot-note">
-      界面截图为实机拍摄（非效果图）。诊断卡片里的「配置行 0」是因为拍摄机不是 TCL 设备、读不到厂商配置；
-      在电视上会显示实际读到的配置行数。
-    </p>
+    <details>
+      <summary>我不会用命令行，怎么查这两条？</summary>
+      <div class="a">
+        <p>两个办法，任选其一：</p>
+        <p>① 电视上装一个「电视 ADB」类小工具（应用商店里搜 ADB），打开后在它的命令行里输入上面两条。</p>
+        <p>② 更省事：<strong style="color:var(--fg)">直接装通用版试试</strong>。装好后打开，它会把你的电视型号、能不能用，直接写在第一屏的诊断卡片里 —— 一看就知道，不合适就卸载，不会留下任何改动。</p>
+      </div>
+    </details>
   </div>
 </section>
 
-<section>
-  <div class="wrap">
-    <div class="eyebrow">解决什么</div>
-    <h2>你大概遇到过这三件事</h2>
-    <div class="grid g3">
-      <div class="card">
-        <div class="num">1</div>
-        <h3>换了桌面，装不上</h3>
-        <p>下载了第三方桌面，点安装弹一句「不支持安装此应用」。厂商在安装器里加了校验，第三方桌面被单独拦住了。</p>
-      </div>
-      <div class="card">
-        <div class="num">2</div>
-        <h3>U 盘里的 APK 装不进去</h3>
-        <p>用文件管理器点开安装，一样被拒。很多人以为是格式问题，其实是被安装来源策略挡住了。</p>
-      </div>
-      <div class="card">
-        <div class="num">3</div>
-        <h3>开机就是广告和推荐位</h3>
-        <p>待机唤醒弹推广、应用商店推专题、首页一排付费入口。这些都能关，但开关藏在厂商自己的配置里。</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="how" style="background:linear-gradient(180deg,transparent,rgba(255,255,255,.018),transparent)">
-  <div class="wrap">
-    <div class="eyebrow">它怎么做到的</div>
-    <h2>把厂商那道看不见的校验，<br>变成一张看得懂的清单</h2>
-    <p class="sub">
-      直接反编译了电视上的安装器（<span class="kbd">PackageInstaller_tv.apk</span>），把这套校验完整读了一遍。
-      总共六个策略，但真正会拦事情的只有四条 —— 而且拦住你的往往不是你以为的那条。
-    </p>
-
-    <div class="tbl">
-      <div class="row head">
-        <div>策略</div>
-        <div>判定逻辑</div>
-        <div>拦谁</div>
-      </div>
-      <div class="row">
-        <div class="mono">launcherStrategy</div>
-        <p>只对声明了 <span class="kbd">MAIN</span> + <span class="kbd">HOME</span> 的 APK 生效。包名在放行名单里，或者签名等于当前默认桌面才放行。</p>
-        <div><span class="tag hit">第三方桌面</span></div>
-      </div>
-      <div class="row">
-        <div class="mono">blackListStrategy</div>
-        <p>包名命中名单就直接拒。这份名单是 OTA 下发的，普通应用看不到。</p>
-        <div><span class="tag cond">名单内的包</span></div>
-      </div>
-      <div class="row">
-        <div class="mono">overDueStrategy</div>
-        <p>同上，另一份“过期”名单，通常用来挡住旧版本回装。</p>
-        <div><span class="tag cond">名单内的包</span></div>
-      </div>
-      <div class="row">
-        <div class="mono">thridStrategy</div>
-        <p>只有当发起安装的是系统安装器时才检查来源。所以你从文件管理器点开装会被拒，但换一条安装路径就不触发。</p>
-        <div><span class="tag hit">U 盘 / 文件管理器安装</span></div>
-      </div>
-      <div class="row">
-        <div class="mono">pmStrategy</div>
-        <p>带 <span class="kbd">INSTALL_FROM_ADB</span> 标志的安装直接拒。这条意味着查攻略“开 ADB 装”未必管用。</p>
-        <div><span class="tag hit">adb install</span></div>
-      </div>
-      <div class="row">
-        <div class="mono">safeStrategy</div>
-        <p>空实现，永远放行。名字最像安全校验，实际什么都不做。</p>
-        <div><span class="tag pass">不拦任何东西</span></div>
-      </div>
-    </div>
-
-    <div class="grid g2" style="margin-top:22px">
-      <div class="card">
-        <h3>所以它不做“关闭全部校验”</h3>
-        <p>那种做法会把黑名单、来源校验一起废掉。这里只改真正需要的那一项：往桌面放行名单加一个包名，或者从拦截名单里移出一个。改之前备份，改之后读回核对。</p>
-      </div>
-      <div class="card warn">
-        <h3>而且它不偷偷装</h3>
-        <p>装任何东西仍然会弹一次系统安装确认框。普通应用没有静默安装权限，这一步免不了 —— 也故意不免。装不装永远由坐在电视前的人决定。</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <div class="eyebrow">推送安装</div>
-    <h2>手机扫一下，包就送到电视里</h2>
-    <p class="sub">
-      电视上点「推送安装」，屏幕会显示一个局域网地址。手机连同一个 WiFi 打开它，选 APK 上传就行，不用拷 U 盘、不用装第二个 app。
-      那个页面只能收文件，不能安装、不能改任何设置。
-    </p>
-    <div class="steps">
-      <div class="step">
-        <div class="n">1</div>
-        <h4>发过去</h4>
-        <p>手机浏览器上传，或直接在电视上点「选包安装」从 U 盘挑。两条路都行。</p>
-      </div>
-      <div class="step">
-        <div class="n">2</div>
-        <h4>先判定</h4>
-        <p>解析包名、版本、是否桌面、签名，算出它会被哪条策略拦，告诉你准备怎么处理。</p>
-      </div>
-      <div class="step">
-        <div class="n">3</div>
-        <h4>改那一处</h4>
-        <p>带着哈希比对写入配置，自动备份原值。只动必要的一项，其它策略一字不改。</p>
-      </div>
-      <div class="step">
-        <div class="n">4</div>
-        <h4>正常安装</h4>
-        <p>走系统原生安装框，装完再查三项：能解析到吗、被禁了吗、有可启动入口吗。</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="download" style="background:linear-gradient(180deg,transparent,rgba(255,255,255,.018),transparent)">
+<section id="download">
   <div class="wrap">
     <div class="eyebrow">下载</div>
     <h2>四个包，只装一个</h2>
-    <p class="sub">功能完全一致，区别只是内置了哪套桌面。同包名同签名，可以互相覆盖安装，换桌面不用先卸载。</p>
+    <p class="sub">
+      功能一模一样，区别只是<strong style="color:var(--fg)">内置了哪套桌面</strong>。
+      <strong style="color:var(--fg)">已经装好桌面的人选「通用版」</strong>，还没装的随便挑一个喜欢的。
+      以后想换桌面，直接装另一个覆盖上去就行，不用先卸载。
+    </p>
     <div class="dl">
       <a class="pkg rec" href="https://mmaotv.github.io/ffalcontrol-tcl/apk/ffalcontrol-0.3.0-universal.apk">
         <div class="kicker">推荐 · 已有桌面选这个</div>
         <div class="name">通用版</div>
         <div class="size">90 KB</div>
-        <div class="desc">不内置桌面。只做净化 + 推送安装，体积最小。</div>
-        <span class="go">下载</span>
-      </a>
-      <a class="pkg" href="https://mmaotv.github.io/ffalcontrol-tcl/apk/ffalcontrol-0.3.0-cleanyourtv.apk">
-        <div class="kicker">桌面一</div>
-        <div class="name">CleanYourTV</div>
-        <div class="size">0.6 MB</div>
-        <div class="desc">极简，纯直播与应用入口，没有推荐流。</div>
+        <div class="desc">不内置桌面。只做去广告和装包，体积最小。</div>
         <span class="go">下载</span>
       </a>
       <a class="pkg" href="https://mmaotv.github.io/ffalcontrol-tcl/apk/ffalcontrol-0.3.0-aerial.apk">
-        <div class="kicker">桌面二</div>
+        <div class="kicker">桌面一 · 好看</div>
         <div class="name">Aerial</div>
         <div class="size">3 MB</div>
-        <div class="desc">tvOS 风格，天气时钟与自定义壁纸，开源。</div>
+        <div class="desc">苹果电视那种风格，天气时钟 + 自定义壁纸。</div>
+        <span class="go">下载</span>
+      </a>
+      <a class="pkg" href="https://mmaotv.github.io/ffalcontrol-tcl/apk/ffalcontrol-0.3.0-cleanyourtv.apk">
+        <div class="kicker">桌面二 · 极简</div>
+        <div class="name">CleanYourTV</div>
+        <div class="size">0.6 MB</div>
+        <div class="desc">只有应用和直播入口，一个推荐位都没有。</div>
         <span class="go">下载</span>
       </a>
       <a class="pkg" href="https://mmaotv.github.io/ffalcontrol-tcl/apk/ffalcontrol-0.3.0-emotnui.apk">
-        <div class="kicker">桌面三</div>
+        <div class="kicker">桌面三 · 影视墙</div>
         <div class="name">Emotn UI</div>
         <div class="size">14 MB</div>
-        <div class="desc">卡片式布局，可换主题，闭源免费软件。</div>
+        <div class="desc">海报卡片式，可换主题，像流媒体首页。</div>
         <span class="go">下载</span>
       </a>
     </div>
-    <p class="meta" style="text-align:left;margin-top:20px">
-      下载直连 GitHub Pages 上的 APK 镜像（走 github.io，国内可达）。也可以走 <a href="https://github.com/mmaotv/ffalcontrol-tcl/releases" style="color:var(--accent)">GitHub Releases</a>（国内可能打不开）或 <a href="https://tcl-tv-cleaner.app.workbuddy.host/?sharecode=WLC7E2O3VG" style="color:var(--accent)">备用镜像页</a>。
-    </p>
-    <p class="meta" style="text-align:left;margin-top:12px">
-      装的顺序：装上 → 打开 → 点「装内置桌面」→ 系统确认框点安装 → 自动弹「默认桌面」选它 → 点「一键净化」→ <strong style="color:var(--fg)">拔插头 30 秒再上电</strong>。
+    <p class="meta" style="text-align:left;margin-top:22px">
+      下载走 GitHub Pages 镜像（国内可达）。打不开就换 <a href="https://github.com/mmaotv/ffalcontrol-tcl/releases" style="color:var(--green)">GitHub Releases</a>
+      或 <a href="https://tcl-tv-cleaner.app.workbuddy.host/?sharecode=WLC7E2O3VG" style="color:var(--green)">备用镜像页</a>。
     </p>
   </div>
 </section>
 
-<section>
+<section id="start">
   <div class="wrap">
-    <div class="eyebrow">兼容性</div>
-    <h2>先确认你的电视在这张表里</h2>
-    <div class="compat">
-      <div class="box yes">
-        <h4>已实测</h4>
-        <ul>
-          <li>TCL Smart TV Pro · MT9655_4K_CN · Android 14</li>
-          <li>固件 UTT2.250416.001 AU01（雷鸟 鹤7 75R79A 同款）</li>
-          <li>22 个待优化应用全部在位，缺失 0 个</li>
-        </ul>
+    <div class="eyebrow">怎么装</div>
+    <h2>三步，只需要点一次按钮</h2>
+    <p class="sub">没有设置项要调，没有账号要登录。装好之后，一个按钮会把「放行 → 装桌面 → 设为默认」连着做完。</p>
+    <div class="steps">
+      <div class="step">
+        <div class="n">1</div>
+        <h4>把 APK 装到电视上</h4>
+        <p>下载的包拷进 U 盘插到电视，用电视上的「文件管理」点开安装。第一次会问「允许安装未知应用」，选允许。</p>
       </div>
-      <div class="box maybe">
-        <h4>预期可用</h4>
-        <ul>
-          <li>MT9655 / MT9653 平台，Android 12–14，国内固件</li>
-          <li>雷鸟 FFALCON 同代机型</li>
-          <li>TCL 旗下同套桌面与守卫固件的机型</li>
-        </ul>
+      <div class="step">
+        <div class="n">2</div>
+        <h4>点「装内置桌面」</h4>
+        <p>打开应用，遥控器选中这个按钮按确定。它会自动做完三件事：放行、装桌面、弹框问你要不要设为默认桌面 —— 选「确定」。</p>
       </div>
-      <div class="box no">
-        <h4>不适用</h4>
-        <ul>
-          <li>非 MT96 平台（Amlogic、海思方案的旧机型）</li>
-          <li>海外版 Google TV 固件</li>
-          <li>小米、海信、华为等其它品牌</li>
-        </ul>
+      <div class="step">
+        <div class="n">3</div>
+        <h4>拔插头，等 30 秒再插上</h4>
+        <p>去广告是开机那一刻生效的，所以必须断电重启一次。之后每次开机就是干净桌面了。</p>
       </div>
-      <div class="box">
-        <h4>不用装工具也能自查</h4>
-        <ul>
-          <li><span class="kbd">getprop ro.board.platform</span> 返回 MT9655 或 MT9653</li>
-          <li><span class="kbd">pm path com.tcl.guard</span> 有输出</li>
-          <li>两条都满足才装，否则装了也没效果</li>
-        </ul>
+    </div>
+    <div class="shots">
+      <div class="shot">
+        <img src="shots/main-aerial.png" alt="工具主界面：一屏就是全部功能，遥控器上下左右操作" loading="lazy">
+        <div class="cap"><strong style="color:var(--fg)">主界面就这一屏。</strong>下面是三排按钮，遥控器上下左右就够，不用记路径。</div>
       </div>
+      <div class="shot">
+        <img src="shots/push-analysis.png" alt="装包之前先告诉你这个包会不会被拦，以及准备怎么处理" loading="lazy">
+        <div class="cap"><strong style="color:var(--fg)">装之前先告诉你结果。</strong>这个包会不会被拦、它准备怎么处理，都写在卡片上，你点头才动手。</div>
+      </div>
+    </div>
+    <div class="notice" style="border-color:var(--line);background:rgba(255,255,255,.025)">
+      <h4 style="color:var(--fg)">开机后如果又跳回原来的桌面</h4>
+      <p>按一下遥控器的 <strong style="color:var(--fg)">Home 键</strong> 就回到新桌面了。这是电视固件的固定行为 —— 开机时会强行拉起一次厂商桌面，工具改不掉它，只能按一下。</p>
     </div>
   </div>
 </section>
 
-<section>
+<section id="faq" style="background:linear-gradient(180deg,transparent,rgba(255,255,255,.018),transparent)">
   <div class="wrap">
-    <div class="eyebrow">边界</div>
-    <h2>它做什么，不做什么</h2>
-    <div class="grid g2">
-      <div class="card">
-        <h3>做</h3>
-        <p>关掉预装广告、遥测、推荐位与诱导入口；装第三方桌面并设为首页；绕过厂商对安装来源的额外限制，让你能装自己想要的软件。</p>
-      </div>
-      <div class="card">
-        <h3>不做</h3>
-        <p>不做静默安装；不绕过系统安装确认框；不破解会员、不解除付费内容授权；不刷机、不改系统分区、不需要 root。</p>
-      </div>
+    <div class="eyebrow">常见问题</div>
+    <h2>装之前最常问的几个</h2>
+    <div style="margin-top:26px">
+      <details>
+        <summary>装完广告还在？</summary>
+        <div class="a">
+          <p>九成是因为<strong style="color:var(--fg)">没断电重启</strong>。去广告是在开机那一刻由系统组件执行的，不拔插头就一直不生效。</p>
+          <p>还是不行就回应用点一下「一键净化」，再拔插头 30 秒。仍然不行，点「刷新诊断」看看配置有没有写进去。</p>
+        </div>
+      </details>
+      <details>
+        <summary>会不会把电视弄坏？要 root 吗？</summary>
+        <div class="a">
+          <p>不用 root，不刷机，不改系统分区，也不影响保修 —— 它只是通过电视自己开放的配置接口改了几项设置，跟你用遥控器改设置是同一类操作。</p>
+          <p>最坏情况是某个应用打不开，恢复出厂设置就回到原样（配置会一并回到默认值）。</p>
+        </div>
+      </details>
+      <details>
+        <summary>预装的应用能删掉吗？</summary>
+        <div class="a">
+          <p>删不掉，但能<strong style="color:var(--fg)">彻底禁用</strong> —— 桌面上看不见、后台不运行、也不占内存，效果和删了差不多。它们在只读分区里，厂商没给卸载白名单，任何工具都真删不了。</p>
+        </div>
+      </details>
+      <details>
+        <summary>不在 U 盘里的软件怎么装到电视上？</summary>
+        <div class="a">
+          <p>用「推送安装」：电视上点它，屏幕会显示一个类似 <span class="kbd">http://192.168.1.20:18743</span> 的地址。手机连同一个 WiFi，浏览器打开这个地址，选 APK 传上去，电视上就会出现在列表里。</p>
+          <p>那个网页只能收文件，不能安装、不能改设置，所以不需要密码。装不装最后还是你在电视前点。</p>
+        </div>
+      </details>
+      <details>
+        <summary>为什么装个软件还要我点一次「安装」？</summary>
+        <div class="a">
+          <p>因为安卓不允许普通应用静默安装，这一步绕不过去，也<strong style="color:var(--fg)">故意不绕</strong>。工具负责的是把厂商多加的那道拦截撤掉，最后一下永远由你确认。</p>
+        </div>
+      </details>
+      <details>
+        <summary>它到底改了什么？想自己看原理</summary>
+        <div class="a">
+          <p>改了四行厂商配置：一份开机禁用名单（用来去广告）、一份启动拦截表，以及安装白名单里的三条名单项。每次改之前都备份原值，能回滚。</p>
+          <p>厂商在安装器里加了六道校验，它会先算出你要装的包会撞上哪一道，只改那一条，别的校验一律不动 —— 也不关闭全局开关。</p>
+          <p>想逐条看：<a href="https://github.com/mmaotv/ffalcontrol-tcl/blob/main/docs/technical.md" style="color:var(--green)">原理与接口</a>。
+            整个项目是开源的，代码在 <a href="https://github.com/mmaotv/ffalcontrol-tcl" style="color:var(--green)">GitHub</a>。</p>
+        </div>
+      </details>
     </div>
-
     <div class="notice">
-      <h4>关于风险</h4>
-      <p>它会直接写厂商的系统配置，写错可能让你点不开某些应用。所以每次写入前都备份原值、带哈希比对，可以在接口里回滚；最坏情况恢复出厂设置，配置会回到固件默认值。</p>
-      <p>另外：恢复出厂不会回滚固件版本，OTA 升级有可能收紧这些策略。升级固件后建议重新跑一次诊断。</p>
+      <h4>用之前值得知道的三件事</h4>
+      <p>① 它真的会写系统配置，所以请只在自己的电视上用。</p>
+      <p>② 恢复出厂不会回滚电视的系统版本；系统升级（OTA）之后策略可能变严，升级完重新点一次「刷新诊断」。</p>
+      <p>③ 它只负责绕过厂商对<strong style="color:var(--fg)">安装来源</strong>的限制 —— 不破解会员、不解锁付费内容，那些不做，也没打算做。</p>
     </div>
   </div>
 </section>
